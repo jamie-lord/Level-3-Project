@@ -268,13 +268,14 @@ get_total_sources(current_database).times {
       #last item scan time
       item_last_scan = Time.now.to_i
 
-      #remove HTML from summary
-      item_summary = ActionView::Base.full_sanitizer.sanitize(Readability::Document.new(entry.summary).content).strip
-
       #generate keywords from full_content
       item_full_content = scrape_full_content(entry.url)
 
+      #only continue if full content is available
       if item_full_content != "fail"
+        #remove HTML from summary
+        item_summary = ActionView::Base.full_sanitizer.sanitize(Readability::Document.new(entry.summary).content).strip
+
         begin
           keywords = generate_keywords(item_full_content)
 
@@ -282,43 +283,45 @@ get_total_sources(current_database).times {
         rescue
           puts "\n!!!!!!!!!!!!!!!!!ERROR: Keywords!!!!!!!!!!!!!!!!!"
         end
-      end
-
-      #item meta:
-      puts "\n~~~~~~~~~~~~~~~~META DATA~~~~~~~~~~~~~~~~"
-      puts "\nItem identifier:\t#{item_identifier}"
-      puts "\nkey:\t\t\titem:#{source_identifier}:#{item_identifier}:meta"
-      puts "\nurl:\t\t\t#{entry.url}"
-      puts "\ntitle:\t\t\t#{entry.title}"
-      puts "\npublished:\t\t#{item_published}"
-      #puts "\nfull_content:\t\t\t#{item_full_content}"
-      puts "\nsummary:\t\t#{item_summary.truncate(100)}"
-      puts "\nauthor:\t\t\t#{entry.author}"
-      puts "\nlast_scan:\t\t#{item_last_scan}"
-      puts "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-
-      #Add new item
-      current_database.hmset("items:#{source_identifier}:#{item_identifier}:meta","url",entry.url,"title",entry.title,"published",item_published,"full_content",item_full_content,"summary",item_summary,"author",entry.author,"last_scan",item_last_scan)
-
-      if entry.respond_to? :categories
 
         #item meta:
-        puts "\n~~~~~~~~~~~~~~~~CATEGORIES~~~~~~~~~~~~~~~~"
+        puts "\n~~~~~~~~~~~~~~~~META DATA~~~~~~~~~~~~~~~~"
+        puts "\nItem identifier:\t#{item_identifier}"
+        puts "\nkey:\t\t\titem:#{source_identifier}:#{item_identifier}:meta"
+        puts "\nurl:\t\t\t#{entry.url}"
+        puts "\ntitle:\t\t\t#{entry.title}"
+        puts "\npublished:\t\t#{item_published}"
+        #puts "\nfull_content:\t\t\t#{item_full_content}"
+        puts "\nsummary:\t\t#{item_summary.truncate(100)}"
+        puts "\nauthor:\t\t\t#{entry.author}"
+        puts "\nlast_scan:\t\t#{item_last_scan}"
+        puts "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-        #create set for item categories
-        entry.categories.each do |category|
-          current_database.sadd("items:#{source_identifier}:#{item_identifier}:categories", "#{category}")
-          puts "-\t#{category}"
+        #Add new item
+        current_database.hmset("items:#{source_identifier}:#{item_identifier}:meta","url",entry.url,"title",entry.title,"published",item_published,"full_content",item_full_content,"summary",item_summary,"author",entry.author,"last_scan",item_last_scan)
+
+        if entry.respond_to? :categories
+
+          #item meta:
+          puts "\n~~~~~~~~~~~~~~~~CATEGORIES~~~~~~~~~~~~~~~~"
+
+          #create set for item categories
+          entry.categories.each do |category|
+            current_database.sadd("items:#{source_identifier}:#{item_identifier}:categories", "#{category}")
+            puts "-\t#{category}"
+          end
+
+          puts "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+
         end
 
-        puts "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+      else
+        puts "\n!!!!!!!!!!!!!!!!!ERROR: Full content not available!!!!!!!!!!!!!!!!!"
 
+      #end full content if
       end
-    
-    #end adding new item  
-    end
 
-    
+    end    
 
   	#current_database.hmset("items:#{current_source_id}:guid_id", "#{next_item_id}", "#{entry.id}")
 
