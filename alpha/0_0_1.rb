@@ -243,15 +243,15 @@ get_total_sources(current_database).times {
         if entry.respond_to? :categories
           
           #item categories
-          puts "\n~~~~~~~~~~~~~~~~CATEGORIES~~~~~~~~~~~~~~~~"
+          #puts "\n~~~~~~~~~~~~~~~~CATEGORIES~~~~~~~~~~~~~~~~"
 
           #create set for item categories
           entry.categories.each do |category|
             current_database.sadd("items:#{source_identifier}:#{item_identifier}:categories", "#{category}")
-            puts "-\t#{category}"
+            #puts "-\t#{category}"
           end
 
-          puts "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+          #puts "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
         end
 
