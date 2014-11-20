@@ -35,7 +35,7 @@ def scrape_full_content(url)
 end
 
 def get_total_sources(databaseConnection)
-	return databaseConnection.get("next_source_id").to_i
+	return databaseConnection.get("source:next_id").to_i
 end
 
 def get_source_url(databaseConnection, current_source_id)
