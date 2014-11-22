@@ -18,50 +18,57 @@ end
 #database connection
 current_database = Redis.new(:host => "192.168.0.13", :port => 6379, :db => 0)
 
-puts "Please enter the source URL..."
+url = ""
 
-url = gets
+while url != "q"
 
-url.strip!
+  send_to_db = false
 
-current_source_id = 0
+  puts "Please enter the source URL... (q to quit)"
 
-#check if source already exists
-get_total_sources(current_database).times {
-  if get_source_url(current_database, current_source_id).to_s == url.to_s
-    puts "The source already exists! source:#{current_source_id}"
-    abort
+  url = gets
+
+  url.strip!
+
+  current_source_id = 0
+
+  #check if source already exists
+  get_total_sources(current_database).times {
+    if get_source_url(current_database, current_source_id).to_s == url.to_s
+      puts "The source already exists! source:#{current_source_id}"
+    end
+    current_source_id += 1
+  }
+
+  #test valid source
+
+  #generate source name
+  begin
+    new_feed = Feedjira::Feed.fetch_and_parse url
+
+    new_source_name = new_feed.title
+
+    send_to_db = true
+
+    if new_source_name == nil
+      puts "Source name: nil"
+      send_to_db = false
+    end
+    
+  rescue
+    puts "Failed to get source RSS"
   end
-  current_source_id += 1
-}
 
-#test valid source
+  if send_to_db == true
+    #add source
+    new_source_id = get_total_sources(current_database)
 
-#generate source name
-begin
-  new_feed = Feedjira::Feed.fetch_and_parse url
+    current_database.hmset("source:#{new_source_id}","url",url,"name",new_source_name)
 
-  new_source_name = new_feed.title
+    #increment source:next_id
+    current_database.incr("source:next_id")
 
-  if new_source_name == nil
-    puts "Source name: nil"
-    abort
+    puts "Source #{new_source_id} AKA #{new_source_name} sucessfully added"
   end
   
-rescue
-  puts "Failed to get source RSS"
-  abort
 end
-
-
-#add source
-new_source_id = get_total_sources(current_database)
-
-current_database.hmset("source:#{new_source_id}","url",url,"name",new_source_name)
-
-#increment source:next_id
-current_database.incr("source:next_id")
-
-puts "Source #{new_source_id} AKA #{new_source_name} sucessfully added"
-
-abort
