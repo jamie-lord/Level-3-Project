@@ -333,7 +333,7 @@ get_total_sources(current_database).times {
 end
 
 #temp wait
-temp = gets
+#temp = gets
 
   #move on to next source URL
   current_source_id += 1
