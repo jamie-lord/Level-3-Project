@@ -128,7 +128,7 @@ get_total_sources(current_database).times {
 	#get the RSS feed from source URL
 	current_feed = Feedjira::Feed.fetch_and_parse current_source_url
 
-  source_identifier = strip_url(current_source_url)
+  source_identifier = current_source_id
 
 	#source information
   puts "\n~~~~~~~~~~~~~SOURCE DATA~~~~~~~~~~~~~"

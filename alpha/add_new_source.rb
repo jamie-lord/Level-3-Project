@@ -23,52 +23,58 @@ url = ""
 while url != "q"
 
   send_to_db = false
+  already_exists = false
 
   puts "Please enter the source URL... (q to quit)"
 
   url = gets
 
-  url.strip!
+  if url != "q"
 
-  current_source_id = 0
+    url.strip!
 
-  #check if source already exists
-  get_total_sources(current_database).times {
-    if get_source_url(current_database, current_source_id).to_s == url.to_s
-      puts "The source already exists! source:#{current_source_id}"
+    current_source_id = 0
+
+    #check if source already exists
+    get_total_sources(current_database).times {
+      if get_source_url(current_database, current_source_id).to_s == url.to_s
+        puts "The source already exists! source:#{current_source_id}"
+        already_exists = true
+      end
+      current_source_id += 1
+    }
+
+    #test valid source
+
+    #generate source name
+    begin
+      new_feed = Feedjira::Feed.fetch_and_parse url
+
+      new_source_name = new_feed.title
+
+      send_to_db = true
+
+      if new_source_name == nil
+        puts "Source name: nil"
+        send_to_db = false
+      end
+      
+    rescue
+      puts "Failed to get source RSS"
     end
-    current_source_id += 1
-  }
 
-  #test valid source
+    if send_to_db == true && already_exists == false
+      #add source
+      new_source_id = get_total_sources(current_database)
 
-  #generate source name
-  begin
-    new_feed = Feedjira::Feed.fetch_and_parse url
+      current_database.hmset("source:#{new_source_id}","url",url,"name",new_source_name)
 
-    new_source_name = new_feed.title
+      #increment source:next_id
+      current_database.incr("source:next_id")
 
-    send_to_db = true
-
-    if new_source_name == nil
-      puts "Source name: nil"
-      send_to_db = false
+      puts "Source #{new_source_id} AKA #{new_source_name} sucessfully added"
     end
-    
-  rescue
-    puts "Failed to get source RSS"
-  end
 
-  if send_to_db == true
-    #add source
-    new_source_id = get_total_sources(current_database)
-
-    current_database.hmset("source:#{new_source_id}","url",url,"name",new_source_name)
-
-    #increment source:next_id
-    current_database.incr("source:next_id")
-
-    puts "Source #{new_source_id} AKA #{new_source_name} sucessfully added"
   end
   
 end
