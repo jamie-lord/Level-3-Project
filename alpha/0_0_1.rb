@@ -7,6 +7,7 @@ require "open-uri"
 require "action_view"
 require "readability"
 require "highscore"
+require "timeout"
 
 def scrape_full_content(url)
 
@@ -14,19 +15,28 @@ def scrape_full_content(url)
     #get full content
     full_source = open(url).read
 
-    #strip HTML tags
-    full_content = ActionView::Base.full_sanitizer.sanitize(Readability::Document.new(full_source).content).squeeze(" ").strip
+    begin
+      Timeout.timeout(5){
+        #strip HTML tags
+        full_content = ActionView::Base.full_sanitizer.sanitize(Readability::Document.new(full_source).content).squeeze(" ").strip
+      }
 
-    #remove blank lines and tabs
-    full_content.gsub! /\t/, ''
+      #remove blank lines and tabs
+      full_content.gsub! /\t/, ''
 
-    full_content.gsub! /^$\n/, ''
+      full_content.gsub! /^$\n/, ''
 
-    full_content.gsub! /^ $/, ''
+      full_content.gsub! /^ $/, ''
 
-    full_content.gsub! /\n+/, "\n"
+      full_content.gsub! /\n+/, "\n"
 
-    full_content.gsub! /^$/, ''
+      full_content.gsub! /^$/, ''
+
+    rescue Timeout::Error
+      puts "\n!!!!!!!!!!!!!!!!!ERROR: Timeout getting full content!!!!!!!!!!!!!!!!!"
+      full_content = "fail"
+    end
+    
   rescue
     full_content = "fail"
   end
