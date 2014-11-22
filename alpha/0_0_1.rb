@@ -115,7 +115,7 @@ current_database = Redis.new(:host => "192.168.0.13", :port => 6379, :db => 0)
 
 current_source_id = 0
 
-item_update_interval = 600
+item_update_interval = 1800
 
 #for each source link
 get_total_sources(current_database).times {
@@ -146,7 +146,14 @@ get_total_sources(current_database).times {
   	item_published = entry.published.to_time.to_i
 
     #unique item id
-    item_identifier = strip_url(entry.entry_id)
+    if entry.entry_id != nil
+      item_identifier = strip_url(entry.entry_id)
+    elsif entry.id != nil
+      item_identifier = strip_url(entry.id)
+    elsif entry.url != nil
+      item_identifier = strip_url(entry.url)
+    end
+    
 
     if current_database.exists("items:#{source_identifier}:#{item_identifier}:meta") == true
       
@@ -321,19 +328,12 @@ get_total_sources(current_database).times {
       #end full content if
       end
 
-    end    
-
-  	#current_database.hmset("items:#{current_source_id}:guid_id", "#{next_item_id}", "#{entry.id}")
-
-  	#next_item_id += 1
-
-  	#increment stored next item id
-  	#current_database.set("items:#{source_identifier}:next_item_id","#{next_item_id}")
+    end
     
 end
 
 #temp wait
-#temp = gets
+temp = gets
 
   #move on to next source URL
   current_source_id += 1
