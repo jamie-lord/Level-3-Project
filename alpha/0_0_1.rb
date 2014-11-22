@@ -143,7 +143,11 @@ get_total_sources(current_database).times {
   current_feed.entries.each do |entry|
 
   	#convert datetime to unix timestamp
-  	item_published = entry.published.to_time.to_i
+    if entry.published.to_time != nil
+      item_published = entry.published.to_time.to_i
+    else
+      item_published = Time.now.to_i
+    end
 
     #unique item id
     if entry.entry_id != nil
