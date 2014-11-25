@@ -133,14 +133,16 @@ class Source
 
 end
 
-#database connection
+#database host
 database_host = "192.168.0.13"
 
-current_database = Redis.new(:host => database_host, :port => 6379, :db => 0)
+#constant database connetion
+Current_database = Redis.new(:host => database_host, :port => 6379, :db => 0)
 
 current_source_id = 0
 
-item_update_interval = 1800
+#constant item update interval in seconds
+Item_update_interval = 1800
 
 #runtime information
 puts "\n*********************RUNTIME INFORMATION*********************"
