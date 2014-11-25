@@ -16,6 +16,8 @@ def scrape_full_content(url)
     full_source = open(url).read
 
     begin
+      full_content = ""
+
       Timeout.timeout(5){
         #strip HTML tags
         full_content = ActionView::Base.full_sanitizer.sanitize(Readability::Document.new(full_source).content).squeeze(" ").strip
