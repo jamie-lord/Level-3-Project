@@ -40,10 +40,21 @@ def scrape_full_content(url)
     end
     
   rescue
+    puts "URL used to get full_content: #{url}"
     full_content = "fail"
   end
 
   return full_content
+end
+
+def follow_redirect(url)
+  begin
+    open(url) do |response|
+      return response.base_uri.to_s
+    end
+  rescue
+    return url
+  end
 end
 
 def get_total_sources(databaseConnection)
@@ -123,11 +134,20 @@ class Source
 end
 
 #database connection
-current_database = Redis.new(:host => "192.168.0.13", :port => 6379, :db => 0)
+database_host = "192.168.0.13"
+
+current_database = Redis.new(:host => database_host, :port => 6379, :db => 0)
 
 current_source_id = 0
 
 item_update_interval = 1800
+
+#runtime information
+puts "\n*********************RUNTIME INFORMATION*********************"
+puts "\nDatabase host:\t\t\t#{database_host}"
+puts "\nStart source id:\t\t\t#{current_source_id}"
+puts "\nItem update interval:\t\t\t#{item_update_interval/60} minutes"
+puts "\n*************************************************************"
 
 #for each source link
 get_total_sources(current_database).times {
@@ -153,6 +173,11 @@ get_total_sources(current_database).times {
   set_source_next_item(current_database, source_identifier)
 
   current_feed.entries.each do |entry|
+
+    #follow redirect for item url
+    if entry.url != nil
+      entry.url = follow_redirect(entry.url)
+    end
 
   	#convert datetime to unix timestamp
     if entry.published != nil
@@ -286,7 +311,7 @@ get_total_sources(current_database).times {
 
     #end adding existing item
     else
-      puts "+++++++++++++++ADDING #{source_identifier}:#{item_identifier}+++++++++++++++"
+      puts "\n+++++++++++++++ADDING #{source_identifier}:#{item_identifier}+++++++++++++++"
 
       #last item scan time
       item_last_scan = Time.now.to_i
