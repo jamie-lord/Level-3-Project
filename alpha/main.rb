@@ -10,6 +10,7 @@ require "highscore"
 require "timeout"
 require "colorize"
 require "net/http"
+require "json"
 
 #constant database host
 Database_host = "192.168.0.13"
@@ -90,6 +91,9 @@ class Item
 	attr_accessor :last_scan
 	attr_accessor :status
 
+	#social values
+	attr_accessor :facebook_likes
+	attr_accessor :facebook_shares
 
 	def initialize(source_id, entry)
 
@@ -130,6 +134,8 @@ class Item
 
 	    @last_scan = unix_time_now
 
+	    self.gather_all_social
+
 	    #UPDATE EXISTING ITEM
 	    if does_item_exist == true
 
@@ -167,6 +173,10 @@ class Item
 		        	self.store_keywords
 
 		        end
+
+		        update_attribute("meta", "facebook_likes", @facebook_likes)
+
+		        update_attribute("meta", "facebook_shares", @facebook_shares)
 
 		        #update last_scan time
 		        update_date_attribute("meta", "last_scan", unix_time_now)
@@ -238,8 +248,12 @@ class Item
 
 			$keywords_errors += 1
 
-		end
-		
+		end	
+	end
+
+	def gather_all_social
+		@facebook_likes = social_facebook_likes(@url)
+		@facebook_shares = social_facebook_shares(@url)
 	end
 
 	def time_since_last_scan(timestamp)
@@ -349,7 +363,7 @@ class Item
 	end
 
 	def set_new_item
-		Current_database.hmset("items:#{@source_id}:#{@id}:meta", "url", @url, "title", @title, "published", @published, "full_content", @full_content ,"summary", @summary , "author", @author, "last_scan", @last_scan)
+		Current_database.hmset("items:#{@source_id}:#{@id}:meta", "url", @url, "title", @title, "published", @published, "full_content", @full_content ,"summary", @summary , "author", @author, "facebook_likes", @facebook_likes, "facebook_shares", @facebook_shares, "last_scan", @last_scan)
 	end
 
 	def scrape_full_content(url)
@@ -474,15 +488,45 @@ def scan_source(id)
 
 end
 
+def social_facebook_likes(url)
+	uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20like_count%20from%20link_stat%20where%20url=%22#{url}%22")
+
+	response = Net::HTTP.get_response(uri)
+
+	result = response.body
+
+	begin
+		return JSON.parse(result)['data'][0]['like_count']
+	rescue
+		return "0"
+	end	
+end
+
+def social_facebook_shares(url)
+	uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20share_count%20from%20link_stat%20where%20url=%22#{url}%22")
+
+	response = Net::HTTP.get_response(uri)
+
+	result = response.body
+
+	begin
+		return JSON.parse(result)['data'][0]['share_count']
+	rescue
+		return "0"
+	end	
+end
+
 if __FILE__ == $0
 
 	#starting source id, default = 0
 	source_id = 0
 
 	#constant item update interval in seconds
-	Item_update_interval = 600
+	Item_update_interval = 1800
 
-	Number_of_threads = 10
+	Rescan_interval = 1800
+
+	Number_of_threads = 14
 
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"
