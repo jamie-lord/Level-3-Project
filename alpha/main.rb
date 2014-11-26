@@ -8,6 +8,7 @@ require "action_view"
 require "readability"
 require "highscore"
 require "timeout"
+require "colorize"
 
 #constant database host
 Database_host = "192.168.0.13"
@@ -111,6 +112,8 @@ class Item
 	    	if get_attribute("meta", "last_scan").to_i + Item_update_interval < unix_time_now
 	    		puts "------------UPDATING #{@source_id}:#{@id}------------"
 
+	    		time_since_last_scan(get_attribute("meta", "last_scan"))
+
 	    		#update title
 		        update_attribute("meta", "title", @title)
 
@@ -118,7 +121,7 @@ class Item
 		        update_attribute("meta", "url", @url)
 
 		        #update published date and time
-		        update_attribute("meta", "published", @published)
+		        update_date_attribute("meta", "published", @published)
 
 		        #update item author
 		        update_attribute("meta", "author", @author)
@@ -136,7 +139,7 @@ class Item
 		        end
 
 		        #update last_scan time
-		        set_attribute("meta", "last_scan", unix_time_now)
+		        update_date_attribute("meta", "last_scan", unix_time_now)
 
 		        #update categories
 		        if entry.respond_to? :categories
@@ -144,7 +147,9 @@ class Item
 		        end
 
 		    else
-		    	puts "----------ITEM #{@source_id}:#{@id} NOT UPDATED: TOO YOUNG----------"    
+		    	puts "----------ITEM #{@source_id}:#{@id} NOT UPDATED: TOO YOUNG----------".yellow
+
+		    	time_since_last_scan(get_attribute("meta", "last_scan"))
 	    	end
 
 		#ADD NEW ITEM    
@@ -165,23 +170,38 @@ class Item
 		        end
 		        
 			else
-	        	puts "\n!!!!!!!!!!!!!!!!!ERROR: Full content not available!!!!!!!!!!!!!!!!!"
+	        	puts "\n!!!!!!!!!!!!!!!!!ERROR: Full content not available!!!!!!!!!!!!!!!!!".red
 			end
 		end
 	end
 
 	def store_keywords
-		#update keywords
-		self.generate_keywords
+		begin
+			#update keywords
+			self.generate_keywords
 
-		#set keywords
-		self.set_keywords
+			#set keywords
+			self.set_keywords
+		rescue
+			puts "\n!!!!!!!!!!!!!!!!!ERROR: Failed to get or set keywords!!!!!!!!!!!!!!!!!".red
+		end
+		
+	end
+
+	def time_since_last_scan(timestamp)
+		puts "\nTime since last scan:\t\t\t#{Time.now.to_i - timestamp.to_i} seconds\n"
 	end
 
 	def update_attribute(hash, attribute, value)
 		if get_attribute(hash, attribute) != value        
 			set_attribute(hash, attribute, value)
-		end		        	
+		end
+	end
+
+	def update_date_attribute(hash, attribute, value)
+		if get_attribute(hash, attribute).to_i != value.to_i
+			set_attribute(hash, attribute, value.to_i)
+		end
 	end
 
 	def output_item_meta
@@ -264,7 +284,7 @@ class Item
 
 			Timeout.timeout(5){
 	    		#get full content within 5 seconds
-		    	full_source = open(url).read
+		    	full_source = open(url).read.force_encoding('UTF-8')
 			}
 
 			#strip HTML tags
@@ -284,7 +304,7 @@ class Item
 			return full_content
 	    
 		rescue Timeout::Error
-			puts "\n!!!!!!!!!!!!!!!!!ERROR: Timeout getting full content!!!!!!!!!!!!!!!!!"
+			puts "\n!!!!!!!!!!!!!!!!!ERROR: Timeout getting full content!!!!!!!!!!!!!!!!!".red
 			return "fail"
 		end
 	end
@@ -329,7 +349,7 @@ if __FILE__ == $0
 	source_id = 0
 
 	#constant item update interval in seconds
-	Item_update_interval = 60
+	Item_update_interval = 900
 
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"
@@ -360,8 +380,6 @@ if __FILE__ == $0
 			
 
 		end
-
-		
 
 	  	#move on to next source id
 	  	source_id += 1
