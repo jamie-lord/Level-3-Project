@@ -90,6 +90,7 @@ class Item
 	attr_accessor :title
 	attr_accessor :last_scan
 	attr_accessor :status
+	attr_accessor :twitter_shares
 
 	#social values
 	attr_accessor :facebook_likes
@@ -101,18 +102,6 @@ class Item
 
 		unix_time_now = Time.now.to_i
 
-		#redirect url and set
-	    if entry.url != nil
-	    	@url = follow_url_redirect(entry.url)
-	    end
-
-	  	#convert datetime to unix timestamp
-	    if entry.published != nil
-	    	@published = entry.published.to_time.to_i
-	    else
-	    	@published = unix_time_now
-	    end
-
 	    #unique item id
 	    if entry.entry_id != nil
 	    	@id = strip_url(entry.entry_id)
@@ -122,27 +111,15 @@ class Item
 	    	@id = strip_url(entry.url)
 	    end
 
-	    #scrape full content from url
-		@full_content = self.scrape_full_content(@url)
-
-		#remove HTML from summary
-	    @summary = sanitise_html(entry.summary)
-
-	    @author = entry.author
-
-	    @title = entry.title
-
-	    @last_scan = unix_time_now
-
-	    self.gather_all_social
-
 	    #UPDATE EXISTING ITEM
 	    if does_item_exist == true
 
 	    	if get_attribute("meta", "last_scan").to_i + Item_update_interval < unix_time_now
 	    		if Suppress_output != true
 	    			puts "\n------------UPDATING #{@source_id}:#{@id}------------".blue
-	    		end 
+	    		end
+
+	    		self.configure_primary(entry, unix_time_now)
 
 	    		@status = "updated"
 
@@ -178,6 +155,8 @@ class Item
 
 		        update_attribute("meta", "facebook_shares", @facebook_shares)
 
+		        update_attribute("meta", "twitter_shares", @twitter_shares)
+
 		        #update last_scan time
 		        update_date_attribute("meta", "last_scan", unix_time_now)
 
@@ -203,6 +182,8 @@ class Item
 			if Suppress_output != true
 				puts "\n+++++++++++++++ADDING #{@source_id}:#{@id}+++++++++++++++".green
 			end
+
+			self.configure_primary(entry, unix_time_now)
 
 			if @full_content != "fail"
 				begin
@@ -251,9 +232,38 @@ class Item
 		end	
 	end
 
+	def configure_primary(entry, unix_time_now)
+		#redirect url and set
+	    if entry.url != nil
+	    	@url = follow_url_redirect(entry.url)
+	    end
+
+	  	#convert datetime to unix timestamp
+	    if entry.published != nil
+	    	@published = entry.published.to_time.to_i
+	    else
+	    	@published = unix_time_now
+	    end
+
+	    #scrape full content from url
+		@full_content = self.scrape_full_content(@url)
+
+		#remove HTML from summary
+	    @summary = sanitise_html(entry.summary)
+
+	    @author = entry.author
+
+	    @title = entry.title
+
+	    @last_scan = unix_time_now
+
+	    self.gather_all_social
+	end
+
 	def gather_all_social
 		@facebook_likes = social_facebook_likes(@url)
 		@facebook_shares = social_facebook_shares(@url)
+		@twitter_shares = social_twitter_shares(@url)
 	end
 
 	def time_since_last_scan(timestamp)
@@ -363,7 +373,7 @@ class Item
 	end
 
 	def set_new_item
-		Current_database.hmset("items:#{@source_id}:#{@id}:meta", "url", @url, "title", @title, "published", @published, "full_content", @full_content ,"summary", @summary , "author", @author, "facebook_likes", @facebook_likes, "facebook_shares", @facebook_shares, "last_scan", @last_scan)
+		Current_database.hmset("items:#{@source_id}:#{@id}:meta", "url", @url, "title", @title, "published", @published, "full_content", @full_content ,"summary", @summary , "author", @author, "facebook_likes", @facebook_likes, "facebook_shares", @facebook_shares, "twitter_shares", @twitter_shares, "last_scan", @last_scan)
 	end
 
 	def scrape_full_content(url)
@@ -516,13 +526,27 @@ def social_facebook_shares(url)
 	end	
 end
 
+def social_twitter_shares(url)
+	uri = URI.parse("https://cdn.api.twitter.com/1/urls/count.json?url=#{url}")
+
+	response = Net::HTTP.get_response(uri)
+
+	result = response.body
+
+	begin
+		return JSON.parse(result)['count']
+	rescue
+		return "0"
+	end	
+end
+
 if __FILE__ == $0
 
 	#starting source id, default = 0
 	source_id = 0
 
 	#constant item update interval in seconds
-	Item_update_interval = 1800
+	Item_update_interval = 0
 
 	Rescan_interval = 1800
 

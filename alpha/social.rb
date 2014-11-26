@@ -40,7 +40,24 @@ def social_facebook_shares(url)
 	end	
 end
 
+def social_twitter_shares(url)
+	uri = URI.parse("https://cdn.api.twitter.com/1/urls/count.json?url=#{url}")
 
+	response = Net::HTTP.get_response(uri)
 
-puts social_facebook_likes("http://arstechnica.com/security/2014/11/sony-pictures-hackers-release-list-of-stolen-corporate-files/")
-puts social_facebook_shares("http://arstechnica.com/security/2014/11/sony-pictures-hackers-release-list-of-stolen-corporate-files/")
+	result = response.body
+
+	begin
+		return JSON.parse(result)['count']
+	rescue
+		return "0"
+	end	
+end
+
+url = "http://jhack.co.uk"
+
+puts social_facebook_likes(url)
+puts social_facebook_shares(url)
+puts social_twitter_shares(url)
+
+10.times{|i| STDOUT.write "\r#{i}"; sleep 1}
