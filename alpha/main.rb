@@ -17,6 +17,28 @@ Database_host = "192.168.0.13"
 #constant database connetion
 Current_database = Redis.new(:host => Database_host, :port => 6379, :db => 0)
 
+Start_time = Time.now.to_i
+
+Suppress_output = true
+
+$sources_completed = 0
+
+$items_completed = 0
+
+$new_items = 0
+
+$updated_items = 0
+
+$not_updated_items = 0
+
+$not_added_items = 0
+
+$full_content_errors = 0
+
+$full_content_timeouts = 0
+
+$keywords_errors = 0
+
 class Source
 
 	attr_accessor :id
@@ -112,9 +134,13 @@ class Item
 	    if does_item_exist == true
 
 	    	if get_attribute("meta", "last_scan").to_i + Item_update_interval < unix_time_now
-	    		puts "\n------------UPDATING #{@source_id}:#{@id}------------".blue
+	    		if Suppress_output != true
+	    			puts "\n------------UPDATING #{@source_id}:#{@id}------------".blue
+	    		end 
 
 	    		@status = "updated"
+
+	    		$updated_items += 1
 
 	    		time_since_last_scan(get_attribute("meta", "last_scan"))
 
@@ -151,34 +177,49 @@ class Item
 		        end
 
 		    else
-		    	puts "\n----------ITEM #{@source_id}:#{@id} NOT UPDATED: TOO YOUNG----------".yellow
+		    	if Suppress_output != true
+		    		puts "\n----------ITEM #{@source_id}:#{@id} NOT UPDATED: TOO YOUNG----------".yellow
+		    	end
 
 		    	@status = "not_updated"
+
+		    	$not_updated_items += 1
 
 		    	time_since_last_scan(get_attribute("meta", "last_scan"))
 	    	end
 
 		#ADD NEW ITEM    
 		else
-			puts "\n+++++++++++++++ADDING #{@source_id}:#{@id}+++++++++++++++".green
+			if Suppress_output != true
+				puts "\n+++++++++++++++ADDING #{@source_id}:#{@id}+++++++++++++++".green
+			end
 
 			if @full_content != "fail"
+				begin
+					#store meta
+	       			self.set_new_item
 
-				@status = "new"
+				    #update saved keywords
+				    self.store_keywords
 
-				#store meta
-       			self.set_new_item
+				    #store categories
+			        if entry.respond_to? :categories
+			        	set_categories(entry.categories)
+			        end
 
-			    #update saved keywords
-			    self.store_keywords
+			        @status = "new"
 
-			    #store categories
-		        if entry.respond_to? :categories
-		        	set_categories(entry.categories)
-		        end
+					$new_items += 1
 
+				rescue
+					@status = "not_added"
+
+		    		$not_added_items += 1
+				end
 		    else
-		    	@status = "not_updated"		        	
+		    	@status = "not_added"
+
+		    	$not_added_items += 1
 			end
 		end
 	end
@@ -191,25 +232,36 @@ class Item
 			#set keywords
 			self.set_keywords
 		rescue
-			puts "\n!!!!!!!!!!!!!!!!!ERROR: Failed to get or set keywords!!!!!!!!!!!!!!!!!".red
+			if Suppress_output != true
+				puts "\n!!!!!!!!!!!!!!!!!ERROR: Failed to get or set keywords!!!!!!!!!!!!!!!!!".red
+			end
+
+			$keywords_errors += 1
+
 		end
 		
 	end
 
 	def time_since_last_scan(timestamp)
-		puts "\nTime since last scan:\t\t\t#{Time.now.to_i - timestamp.to_i} seconds\n"
+		if Suppress_output != true
+			puts "\nTime since last scan:\t\t\t#{Time.now.to_i - timestamp.to_i} seconds\n"
+		end
 	end
 
 	def update_attribute(hash, attribute, value)
 		if get_attribute(hash, attribute) != value
-			puts "Updating:\t#{attribute}".yellow
+			if Suppress_output != true
+				puts "Updating:\t#{attribute}".yellow
+			end
 			set_attribute(hash, attribute, value)
 		end
 	end
 
 	def update_date_attribute(hash, attribute, value)
 		if get_attribute(hash, attribute).to_i != value.to_i
-			puts "Updating:\t#{attribute}".yellow
+			if Suppress_output != true
+				puts "Updating:\t#{attribute}".yellow
+			end
 			set_attribute(hash, attribute, value.to_i)
 		end
 	end
@@ -277,14 +329,22 @@ class Item
 
 	def set_categories(categories)
 		if categories.empty? == false
-			puts "\n~~~~~~~~~~~~~~~~CATEGORIES~~~~~~~~~~~~~~~~"
+			if Suppress_output != true
+				puts "\n~~~~~~~~~~~~~~~~CATEGORIES~~~~~~~~~~~~~~~~"
+			end
 			categories.each do |category|
 	        	Current_database.sadd("items:#{@source_id}:#{@id}:categories", "#{category}")
-	        	puts "-\t#{category}"
+	        	if Suppress_output != true
+	        		puts "-\t#{category}"
+	        	end
 	        end
-	        puts "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"#]
+	        if Suppress_output != true
+	        	puts "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+	        end
 	    else
-	    	puts "\n!!!!!!!!!!!!!!!!!WARNING: No categories present!!!!!!!!!!!!!!!!!".yellow
+	    	if Suppress_output != true
+	    		puts "\n!!!!!!!!!!!!!!!!!WARNING: No categories present!!!!!!!!!!!!!!!!!".yellow
+	    	end
 		end
 	end
 
@@ -301,7 +361,12 @@ class Item
 	    		begin
 	    			full_source = open(url).read.force_encoding('UTF-8')
 	    		rescue
-	    			puts "\n!!!!!!!!!!!!!!!!!ERROR: Failed to get full content!!!!!!!!!!!!!!!!!".red
+	    			if Suppress_output != true
+	    				puts "\n!!!!!!!!!!!!!!!!!ERROR: Failed to get full content!!!!!!!!!!!!!!!!!".red
+	    			end
+
+	    			$full_content_errors += 1
+
 					return "fail"
 	    		end
 			}
@@ -323,7 +388,12 @@ class Item
 			return full_content
 	    
 		rescue Timeout::Error
-			puts "\n!!!!!!!!!!!!!!!!!ERROR: Timeout getting full content!!!!!!!!!!!!!!!!!".red
+			if Suppress_output != true
+				puts "\n!!!!!!!!!!!!!!!!!ERROR: Timeout getting full content!!!!!!!!!!!!!!!!!".red
+			end
+
+			$full_content_timeouts += 1
+
 			return "fail"
 		end
 	end
@@ -362,6 +432,48 @@ def sanitise_html(source)
 	return ActionView::Base.full_sanitizer.sanitize(Readability::Document.new(source).content).squeeze(" ").strip
 end
 
+def scan_source(id)
+	#create source object
+	current_source = Source.new(id)
+
+	#output current source information
+	#current_source.output_source_info
+
+	#for each item
+	current_source.feed.entries.each do |entry|
+
+		#create item object
+		current_item = Item.new(id, entry)
+
+		$items_completed += 1
+
+		# if current_item.status != "not_updated"
+		# 	current_item.output_item_meta
+		# end
+
+		system "clear"
+
+		#runtime statistics
+		puts "\n>>>>>>>>>>>>>>>>RUNTIME INFORMATION<<<<<<<<<<<<<<<<<"
+		puts "\nTime running:\t\t\t\t#{Time.now.to_i - Start_time} seconds"
+		puts "\nSources completed:\t\t\t#{$sources_completed}"
+		puts "\nItems completed:\t\t\t#{$items_completed}"
+		puts "\nNew items:\t\t\t\t#{$new_items}".green
+		puts "\nUpdated items:\t\t\t\t#{$updated_items}".blue
+		puts "\nItems not updated:\t\t\t#{$not_updated_items}".yellow
+		puts "\nItems not added:\t\t\t#{$not_added_items}".yellow
+		puts "\nFull content errors:\t\t\t#{$full_content_errors}".red
+		puts "\nFull content timeouts:\t\t\t#{$full_content_timeouts}".red
+		puts "\nKeyword errors:\t\t\t\t#{$keywords_errors}".red
+		puts "\nLast item:\t\t\t\titem:#{current_item.source_id}:#{current_item.id}"
+		puts "\n>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<"
+
+	end
+
+	$sources_completed += 1
+
+end
+
 if __FILE__ == $0
 
 	#starting source id, default = 0
@@ -369,6 +481,8 @@ if __FILE__ == $0
 
 	#constant item update interval in seconds
 	Item_update_interval = 600
+
+	Number_of_threads = 10
 
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"
@@ -378,34 +492,28 @@ if __FILE__ == $0
 	puts "\n*************************************************************"
 
 	#for each source
-	get_total_sources(Current_database).times {
+	(get_total_sources(Current_database)/Number_of_threads).times {
 
-		#create source object
-		current_source = Source.new(source_id)
+		threads = []
 
-		#output current source information
-		current_source.output_source_info
+		Number_of_threads.times do |i|
+			#puts source_id
+			threads << Thread.new{
+				scan_source(source_id+i)
+				Thread::exit()
+			}
 
-		#for each item
-		current_source.feed.entries.each do |entry|
-
-			#create item object
-			current_item = Item.new(source_id, entry)
-
-
-			if current_item.status != "not_updated"
-				current_item.output_item_meta
-			end
-
-		    #temp wait
 			#temp = gets
-			
 
 		end
 
-	  	#move on to next source id
-	  	source_id += 1
+		threads.each(&:join)
+
+		#move on to next source id
+	  	source_id += Number_of_threads
 
 	}
+
+	
 
 end
