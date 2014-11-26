@@ -282,9 +282,14 @@ class Item
 		begin
 			full_source = ""
 
+			#get full content within 5 seconds
 			Timeout.timeout(5){
-	    		#get full content within 5 seconds
-		    	full_source = open(url).read.force_encoding('UTF-8')
+	    		begin
+	    			full_source = open(url).read.force_encoding('UTF-8')
+	    		rescue
+	    			puts "\n!!!!!!!!!!!!!!!!!ERROR: Failed to get full content!!!!!!!!!!!!!!!!!".red
+					return "fail"
+	    		end
 			}
 
 			#strip HTML tags
