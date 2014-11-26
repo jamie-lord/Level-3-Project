@@ -9,6 +9,7 @@ require "readability"
 require "highscore"
 require "timeout"
 require "colorize"
+require "net/http"
 
 #constant database host
 Database_host = "192.168.0.13"
@@ -65,6 +66,7 @@ class Item
 	attr_accessor :full_content
 	attr_accessor :title
 	attr_accessor :last_scan
+	attr_accessor :status
 
 
 	def initialize(source_id, entry)
@@ -110,7 +112,9 @@ class Item
 	    if does_item_exist == true
 
 	    	if get_attribute("meta", "last_scan").to_i + Item_update_interval < unix_time_now
-	    		puts "------------UPDATING #{@source_id}:#{@id}------------"
+	    		puts "\n------------UPDATING #{@source_id}:#{@id}------------".blue
+
+	    		@status = "updated"
 
 	    		time_since_last_scan(get_attribute("meta", "last_scan"))
 
@@ -131,7 +135,7 @@ class Item
 
 		        #update item full_content
 		        if get_attribute("meta", "full_content") != @full_content
-		        	set_attribute("meta", "full_content", @full_content)
+		        	update_attribute("meta", "full_content", @full_content)
 
 		        	#update saved keywords
 		        	self.store_keywords
@@ -147,16 +151,20 @@ class Item
 		        end
 
 		    else
-		    	puts "----------ITEM #{@source_id}:#{@id} NOT UPDATED: TOO YOUNG----------".yellow
+		    	puts "\n----------ITEM #{@source_id}:#{@id} NOT UPDATED: TOO YOUNG----------".yellow
+
+		    	@status = "not_updated"
 
 		    	time_since_last_scan(get_attribute("meta", "last_scan"))
 	    	end
 
 		#ADD NEW ITEM    
 		else
-			puts "\n+++++++++++++++ADDING #{@source_id}:#{@id}+++++++++++++++"
+			puts "\n+++++++++++++++ADDING #{@source_id}:#{@id}+++++++++++++++".green
 
 			if @full_content != "fail"
+
+				@status = "new"
 
 				#store meta
        			self.set_new_item
@@ -168,9 +176,9 @@ class Item
 		        if entry.respond_to? :categories
 		        	set_categories(entry.categories)
 		        end
-		        
-			else
-	        	puts "\n!!!!!!!!!!!!!!!!!ERROR: Full content not available!!!!!!!!!!!!!!!!!".red
+
+		    else
+		    	@status = "not_updated"		        	
 			end
 		end
 	end
@@ -193,13 +201,15 @@ class Item
 	end
 
 	def update_attribute(hash, attribute, value)
-		if get_attribute(hash, attribute) != value        
+		if get_attribute(hash, attribute) != value
+			puts "Updating:\t#{attribute}".yellow
 			set_attribute(hash, attribute, value)
 		end
 	end
 
 	def update_date_attribute(hash, attribute, value)
 		if get_attribute(hash, attribute).to_i != value.to_i
+			puts "Updating:\t#{attribute}".yellow
 			set_attribute(hash, attribute, value.to_i)
 		end
 	end
@@ -209,13 +219,14 @@ class Item
 		puts "\n~~~~~~~~~~~~~~~~META DATA~~~~~~~~~~~~~~~~"
         puts "\nItem identifier:\t#{@id}"
         puts "\nkey:\t\t\titem:#{@source_id}:#{@id}:meta"
+        puts "\nstatus:\t\t\t#{@status}"
         puts "\nurl:\t\t\t#{@url}"
         puts "\ntitle:\t\t\t#{@title}"
-        puts "\npublished:\t\t#{@published}\t\t#{Time.at(@published).to_datetime}"
+        puts "\npublished:\t\t#{@published}\t\t#{Time.at(@published)}"
         #puts "\nfull_content:\t\t\t#{item_full_content}"
         puts "\nsummary:\t\t#{@summary.truncate(100)}"
         puts "\nauthor:\t\t\t#{@author}"
-        puts "\nlast_scan:\t\t#{@last_scan}\t\t#{Time.at(@published).to_datetime}"
+        puts "\nlast_scan:\t\t#{@last_scan}\t\t#{Time.at(@published)}"
         puts "\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 		
 	end
@@ -254,7 +265,6 @@ class Item
 	end
 
 	def set_attribute(hash, attribute, value)
-		puts "Updating #{attribute}"
 		Current_database.hmset("items:#{@source_id}:#{@id}:#{hash}", attribute, value)
 	end
 
@@ -266,12 +276,16 @@ class Item
 	end
 
 	def set_categories(categories)
-		puts "\n~~~~~~~~~~~~~~~~CATEGORIES~~~~~~~~~~~~~~~~"
-		categories.each do |category|
-        	Current_database.sadd("items:#{@source_id}:#{@id}:categories", "#{category}")
-        	puts "-\t#{category}"
-        end
-        puts "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+		if categories.empty? == false
+			puts "\n~~~~~~~~~~~~~~~~CATEGORIES~~~~~~~~~~~~~~~~"
+			categories.each do |category|
+	        	Current_database.sadd("items:#{@source_id}:#{@id}:categories", "#{category}")
+	        	puts "-\t#{category}"
+	        end
+	        puts "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"#]
+	    else
+	    	puts "\n!!!!!!!!!!!!!!!!!WARNING: No categories present!!!!!!!!!!!!!!!!!".yellow
+		end
 	end
 
 	def set_new_item
@@ -354,7 +368,7 @@ if __FILE__ == $0
 	source_id = 0
 
 	#constant item update interval in seconds
-	Item_update_interval = 900
+	Item_update_interval = 600
 
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"
@@ -378,7 +392,10 @@ if __FILE__ == $0
 			#create item object
 			current_item = Item.new(source_id, entry)
 
-		    current_item.output_item_meta
+
+			if current_item.status != "not_updated"
+				current_item.output_item_meta
+			end
 
 		    #temp wait
 			#temp = gets
