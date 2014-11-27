@@ -542,9 +542,6 @@ end
 
 if __FILE__ == $0
 
-	#starting source id, default = 0
-	source_id = 0
-
 	#constant item update interval in seconds
 	Item_update_interval = 900
 
@@ -552,21 +549,45 @@ if __FILE__ == $0
 
 	Number_of_threads = 15
 
-	Total_items = get_total_sources(Current_database)
-
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"
 	puts "\nDatabase host:\t\t\t#{Database_host}"
-	puts "\nStart source id:\t\t\t#{source_id}"
 	puts "\nItem update interval:\t\t\t#{Item_update_interval/60} minutes"
 	puts "\n*************************************************************"
 
-	#for each source
-	(Total_items/Number_of_threads).times {
+	while true
+
+		Total_items = get_total_sources(Current_database)
+
+		#starting source id, default = 0
+		source_id = 0
+
+		#for each source
+		(Total_items/Number_of_threads).times {
+
+			threads = []
+
+			Number_of_threads.times do |i|
+				threads << Thread.new{
+					scan_source(source_id+i)
+					Thread::exit()
+				}
+			end
+
+			threads.each(&:join)
+
+			#move on to next source id
+		  	source_id += Number_of_threads
+
+		}
+
+		Remaining_items = Total_items%Number_of_threads
+
+		source_id = Total_items-Remaining_items
 
 		threads = []
 
-		Number_of_threads.times do |i|
+		Remaining_items.times do |i|
 			threads << Thread.new{
 				scan_source(source_id+i)
 				Thread::exit()
@@ -575,24 +596,6 @@ if __FILE__ == $0
 
 		threads.each(&:join)
 
-		#move on to next source id
-	  	source_id += Number_of_threads
-
-	}
-
-	Remaining_items = Total_items%Number_of_threads
-
-	source_id = Total_items-Remaining_items
-
-	threads = []
-
-	Remaining_items.times do |i|
-		threads << Thread.new{
-			scan_source(source_id+i)
-			Thread::exit()
-		}
 	end
-
-	threads.each(&:join)
 
 end
