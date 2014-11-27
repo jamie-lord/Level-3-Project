@@ -546,11 +546,13 @@ if __FILE__ == $0
 	source_id = 0
 
 	#constant item update interval in seconds
-	Item_update_interval = 0
+	Item_update_interval = 900
 
 	Rescan_interval = 1800
 
-	Number_of_threads = 14
+	Number_of_threads = 15
+
+	Total_items = get_total_sources(Current_database)
 
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"
@@ -560,19 +562,15 @@ if __FILE__ == $0
 	puts "\n*************************************************************"
 
 	#for each source
-	(get_total_sources(Current_database)/Number_of_threads).times {
+	(Total_items/Number_of_threads).times {
 
 		threads = []
 
 		Number_of_threads.times do |i|
-			#puts source_id
 			threads << Thread.new{
 				scan_source(source_id+i)
 				Thread::exit()
 			}
-
-			#temp = gets
-
 		end
 
 		threads.each(&:join)
@@ -582,6 +580,19 @@ if __FILE__ == $0
 
 	}
 
-	
+	Remaining_items = Total_items%Number_of_threads
+
+	source_id = Total_items-Remaining_items
+
+	threads = []
+
+	Remaining_items.times do |i|
+		threads << Thread.new{
+			scan_source(source_id+i)
+			Thread::exit()
+		}
+	end
+
+	threads.each(&:join)
 
 end
