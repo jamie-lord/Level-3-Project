@@ -80,6 +80,7 @@ end
 class Item
 
 	attr_accessor :id
+	attr_accessor :global_id	#the source_id & id
 	attr_accessor :url
 	attr_accessor :published
 	attr_accessor :source_id
@@ -251,6 +252,8 @@ class Item
 
 	    @last_scan = unix_time_now
 
+	    @global_id = source_id.to_s + "/" + id.to_s
+
 	    self.gather_all_social
 	end
 
@@ -341,6 +344,7 @@ class Item
 		score_keyword = Array.new
 		@keywords.each do |keyword|
 			score_keyword.push(keyword.weight, keyword.text)
+			Current_database.zadd("keywords:#{keyword.text}", keyword.weight, @global_id)
 		end
 		Current_database.zadd("items:#{@source_id}:#{@id}:keywords", score_keyword)
 	end
