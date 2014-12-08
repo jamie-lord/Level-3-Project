@@ -143,7 +143,7 @@ class Item
 		        update_attribute("meta", "summary", @summary)
 
 				#update saved keywords
-		        self.generate_and_set_keywords
+		        self.store_keywords
 
 		        update_attribute("meta", "facebook_likes", @facebook_likes)
 
@@ -185,7 +185,7 @@ class Item
 	       			self.set_new_item
 
 				    #update saved keywords
-				    self.generate_and_set_keywords
+				    self.store_keywords
 
 				    #store categories
 			        if entry.respond_to? :categories
@@ -209,7 +209,7 @@ class Item
 		end
 	end
 
-	def generate_and_set_keywords
+	def store_keywords
 		begin
 			#update keywords
 			self.generate_keywords
@@ -340,7 +340,7 @@ class Item
 	def set_keywords
 		@keywords.each do |keyword|
 			#save keywords
-			Current_database.zadd("items:#{@source_id}:#{@id}:keywords","#{keyword.weight}","#{keyword.text}")
+			Current_database.hmset("items:#{@source_id}:#{@id}:keywords","#{keyword.text}","#{keyword.weight}")
 		end
 	end
 

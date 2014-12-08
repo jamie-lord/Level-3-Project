@@ -143,7 +143,7 @@ class Item
 		        update_attribute("meta", "summary", @summary)
 
 				#update saved keywords
-		        self.generate_and_set_keywords
+		        self.store_keywords
 
 		        update_attribute("meta", "facebook_likes", @facebook_likes)
 
@@ -185,7 +185,7 @@ class Item
 	       			self.set_new_item
 
 				    #update saved keywords
-				    self.generate_and_set_keywords
+				    self.store_keywords
 
 				    #store categories
 			        if entry.respond_to? :categories
@@ -209,7 +209,7 @@ class Item
 		end
 	end
 
-	def generate_and_set_keywords
+	def store_keywords
 		begin
 			#update keywords
 			self.generate_keywords
@@ -293,6 +293,7 @@ class Item
         puts "\nurl:\t\t\t#{@url}"
         puts "\ntitle:\t\t\t#{@title}"
         puts "\npublished:\t\t#{@published}\t\t#{Time.at(@published)}"
+        #puts "\nfull_content:\t\t\t#{item_full_content}"
         puts "\nsummary:\t\t#{@summary.truncate(100)}"
         puts "\nauthor:\t\t\t#{@author}"
         puts "\nlast_scan:\t\t#{@last_scan}\t\t#{Time.at(@published)}"
@@ -340,7 +341,7 @@ class Item
 	def set_keywords
 		@keywords.each do |keyword|
 			#save keywords
-			Current_database.zadd("items:#{@source_id}:#{@id}:keywords","#{keyword.weight}","#{keyword.text}")
+			Current_database.hmset("items:#{@source_id}:#{@id}:keywords","#{keyword.text}","#{keyword.weight}")
 		end
 	end
 
