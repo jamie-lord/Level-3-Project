@@ -338,11 +338,10 @@ class Item
 	end
 
 	def set_keywords
-		score_keyword = Array.new
 		@keywords.each do |keyword|
-			score_keyword.push(keyword.weight, keyword.text)
+			#save keywords
+			Current_database.zadd("items:#{@source_id}:#{@id}:keywords","#{keyword.weight}","#{keyword.text}")
 		end
-		Current_database.zadd("items:#{@source_id}:#{@id}:keywords", score_keyword)
 	end
 
 	def set_categories(categories)

@@ -338,11 +338,10 @@ class Item
 	end
 
 	def set_keywords
-		score_keyword = Array.new
 		@keywords.each do |keyword|
-			score_keyword.push(keyword.weight, keyword.text)
+			#save keywords
+			Current_database.zadd("items:#{@source_id}:#{@id}:keywords","#{keyword.weight}","#{keyword.text}")
 		end
-		Current_database.zadd("items:#{@source_id}:#{@id}:keywords", score_keyword)
 	end
 
 	def set_categories(categories)
@@ -537,7 +536,9 @@ end
 if __FILE__ == $0
 
 	#constant item update interval in seconds
-	Item_update_interval = 1800
+	Item_update_interval = 900
+
+	Rescan_interval = 1800
 
 	Number_of_threads = 15
 
