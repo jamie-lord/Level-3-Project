@@ -497,12 +497,15 @@ def scan_source(id)
 end
 
 def social_facebook_likes(url)
-	uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20like_count%20from%20link_stat%20where%20url=%22#{url}%22")
+	begin
+		uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20like_count%20from%20link_stat%20where%20url=%22#{url}%22")
 
-	response = Net::HTTP.get_response(uri)
+		response = Net::HTTP.get_response(uri)
 
-	result = response.body
-
+		result = response.body
+	rescue
+		result = "0"
+	end
 	begin
 		return JSON.parse(result)['data'][0]['like_count']
 	rescue
@@ -511,12 +514,15 @@ def social_facebook_likes(url)
 end
 
 def social_facebook_shares(url)
-	uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20share_count%20from%20link_stat%20where%20url=%22#{url}%22")
+	begin
+		uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20share_count%20from%20link_stat%20where%20url=%22#{url}%22")
 
-	response = Net::HTTP.get_response(uri)
+		response = Net::HTTP.get_response(uri)
 
-	result = response.body
-
+		result = response.body
+	rescue
+		result = "0"
+	end
 	begin
 		return JSON.parse(result)['data'][0]['share_count']
 	rescue
@@ -525,12 +531,15 @@ def social_facebook_shares(url)
 end
 
 def social_twitter_shares(url)
-	uri = URI.parse("https://cdn.api.twitter.com/1/urls/count.json?url=#{url}")
+	begin
+		uri = URI.parse("https://cdn.api.twitter.com/1/urls/count.json?url=#{url}")
 
-	response = Net::HTTP.get_response(uri)
+		response = Net::HTTP.get_response(uri)
 
-	result = response.body
-
+		result = response.body
+	rescue
+		result = "0"
+	end
 	begin
 		return JSON.parse(result)['count']
 	rescue
