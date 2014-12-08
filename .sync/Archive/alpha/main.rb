@@ -142,8 +142,14 @@ class Item
 		        #update item summary
 		        update_attribute("meta", "summary", @summary)
 
-				#update saved keywords
-		        self.store_keywords
+		        #update item full_content
+		        if get_attribute("meta", "full_content") != @full_content
+		        	update_attribute("meta", "full_content", @full_content)
+
+		        	#update saved keywords
+		        	self.store_keywords
+
+		        end
 
 		        update_attribute("meta", "facebook_likes", @facebook_likes)
 
@@ -318,7 +324,7 @@ class Item
 			#set :stemming, true                # => default: false
 	  	end
 
-		@keywords = text.keywords.top(20)
+		@keywords = text.keywords.top(50)
 		
 	end
 
@@ -367,7 +373,7 @@ class Item
 	end
 
 	def set_new_item
-		Current_database.hmset("items:#{@source_id}:#{@id}:meta", "url", @url, "title", @title, "published", @published, "summary", @summary , "author", @author, "facebook_likes", @facebook_likes, "facebook_shares", @facebook_shares, "twitter_shares", @twitter_shares, "last_scan", @last_scan)
+		Current_database.hmset("items:#{@source_id}:#{@id}:meta", "url", @url, "title", @title, "published", @published, "full_content", @full_content ,"summary", @summary , "author", @author, "facebook_likes", @facebook_likes, "facebook_shares", @facebook_shares, "twitter_shares", @twitter_shares, "last_scan", @last_scan)
 	end
 
 	def scrape_full_content(url)
