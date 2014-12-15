@@ -547,6 +547,46 @@ def social_twitter_shares(url)
 	end	
 end
 
+def update_user_items(user_id)
+	user_keywords = get_user_keywords(user_id)
+
+	top_items = []
+
+	user_keywords.each do |user_keyword|
+
+		#get top item for specific keyword
+		item_key = get_top_item(user_keyword)[0].to_s
+
+		source_id = item_key.split("/").first
+
+		item_id = item_key.split("/", 2).last
+
+		puts "Source ID: #{source_id}"
+		puts "Item ID: #{item_key}"
+		
+		top_items << get_item_url(source_id, item_id)
+
+	end
+	return top_items
+end
+
+def get_user_keywords(user_id)
+	#gets all members of sorted list
+	return Current_database.zrevrange("users:#{user_id}:keywords", 0, -1)
+end
+
+def get_username_from_id(user_id)
+	return Current_database.hget("users:#{user_id}:meta", "username")
+end
+
+def get_top_item(keyword)
+	return Current_database.zrevrange("keywords:#{keyword}", 0, 0)
+end
+
+def get_item_url(source_id, item_id)
+	return Current_database.hget("items:#{source_id}:#{item_id}:meta", "url")
+end
+
 if __FILE__ == $0
 
 	#constant item update interval in seconds
