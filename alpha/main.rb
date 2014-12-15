@@ -563,7 +563,7 @@ def update_user_items(user_id)
 
 		puts "Source ID: #{source_id}"
 		puts "Item ID: #{item_key}"
-		
+
 		top_items << get_item_url(source_id, item_id)
 
 	end
@@ -585,6 +585,10 @@ end
 
 def get_item_url(source_id, item_id)
 	return Current_database.hget("items:#{source_id}:#{item_id}:meta", "url")
+end
+
+def get_attribute(hash, attribute)
+	return Current_database.hget("items:#{@source_id}:#{@id}:#{hash}", attribute)
 end
 
 if __FILE__ == $0
