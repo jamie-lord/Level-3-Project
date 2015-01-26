@@ -80,6 +80,7 @@ end
 class Item
 
 	attr_accessor :id
+	attr_accessor :global_id	#the source_id & id
 	attr_accessor :url
 	attr_accessor :published
 	attr_accessor :source_id
@@ -142,14 +143,8 @@ class Item
 		        #update item summary
 		        update_attribute("meta", "summary", @summary)
 
-		        #update item full_content
-		        if get_attribute("meta", "full_content") != @full_content
-		        	update_attribute("meta", "full_content", @full_content)
-
-		        	#update saved keywords
-		        	self.store_keywords
-
-		        end
+				#update saved keywords
+		        self.generate_and_set_keywords
 
 		        update_attribute("meta", "facebook_likes", @facebook_likes)
 
@@ -191,7 +186,7 @@ class Item
 	       			self.set_new_item
 
 				    #update saved keywords
-				    self.store_keywords
+				    self.generate_and_set_keywords
 
 				    #store categories
 			        if entry.respond_to? :categories
@@ -215,7 +210,7 @@ class Item
 		end
 	end
 
-	def store_keywords
+	def generate_and_set_keywords
 		begin
 			#update keywords
 			self.generate_keywords
@@ -256,6 +251,8 @@ class Item
 	    @title = entry.title
 
 	    @last_scan = unix_time_now
+
+	    @global_id = source_id.to_s + "/" + id.to_s
 
 	    self.gather_all_social
 	end
@@ -299,7 +296,6 @@ class Item
         puts "\nurl:\t\t\t#{@url}"
         puts "\ntitle:\t\t\t#{@title}"
         puts "\npublished:\t\t#{@published}\t\t#{Time.at(@published)}"
-        #puts "\nfull_content:\t\t\t#{item_full_content}"
         puts "\nsummary:\t\t#{@summary.truncate(100)}"
         puts "\nauthor:\t\t\t#{@author}"
         puts "\nlast_scan:\t\t#{@last_scan}\t\t#{Time.at(@published)}"
@@ -315,16 +311,16 @@ class Item
 			#set :upper_case, 3
 			#set :long_words, 2
 			#set :long_words_threshold, 15
-			#set :short_words_threshold, 3      # => default: 2
+			set :short_words_threshold, 3      # => default: 2
 			#set :bonus_multiplier, 2           # => default: 3
 			#set :vowels, 1                     # => default: 0 = not considered
 			#set :consonants, 5                 # => default: 0 = not considered
 			set :ignore_case, true             # => default: false
 			#set :word_pattern, /[\w]+[^\s0-9]/ # => default: /\w+/
-			#set :stemming, true                # => default: false
+			set :stemming, true                # => default: false
 	  	end
 
-		@keywords = text.keywords.top(50)
+		@keywords = text.keywords.top(20)
 		
 	end
 
@@ -345,10 +341,12 @@ class Item
 	end
 
 	def set_keywords
+		score_keyword = Array.new
 		@keywords.each do |keyword|
-			#save keywords
-			Current_database.hmset("items:#{@source_id}:#{@id}:keywords","#{keyword.text}","#{keyword.weight}")
+			score_keyword.push(keyword.weight, keyword.text)
+			Current_database.zadd("keywords:#{keyword.text}", keyword.weight, @global_id)
 		end
+		Current_database.zadd("items:#{@source_id}:#{@id}:keywords", score_keyword)
 	end
 
 	def set_categories(categories)
@@ -373,7 +371,7 @@ class Item
 	end
 
 	def set_new_item
-		Current_database.hmset("items:#{@source_id}:#{@id}:meta", "url", @url, "title", @title, "published", @published, "full_content", @full_content ,"summary", @summary , "author", @author, "facebook_likes", @facebook_likes, "facebook_shares", @facebook_shares, "twitter_shares", @twitter_shares, "last_scan", @last_scan)
+		Current_database.hmset("items:#{@source_id}:#{@id}:meta", "url", @url, "title", @title, "published", @published, "summary", @summary , "author", @author, "facebook_likes", @facebook_likes, "facebook_shares", @facebook_shares, "twitter_shares", @twitter_shares, "last_scan", @last_scan)
 	end
 
 	def scrape_full_content(url)
@@ -499,12 +497,15 @@ def scan_source(id)
 end
 
 def social_facebook_likes(url)
-	uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20like_count%20from%20link_stat%20where%20url=%22#{url}%22")
+	begin
+		uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20like_count%20from%20link_stat%20where%20url=%22#{url}%22")
 
-	response = Net::HTTP.get_response(uri)
+		response = Net::HTTP.get_response(uri)
 
-	result = response.body
-
+		result = response.body
+	rescue
+		result = "0"
+	end
 	begin
 		return JSON.parse(result)['data'][0]['like_count']
 	rescue
@@ -513,12 +514,15 @@ def social_facebook_likes(url)
 end
 
 def social_facebook_shares(url)
-	uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20share_count%20from%20link_stat%20where%20url=%22#{url}%22")
+	begin
+		uri = URI.parse("https://graph.facebook.com/fql?q=select%20%20share_count%20from%20link_stat%20where%20url=%22#{url}%22")
 
-	response = Net::HTTP.get_response(uri)
+		response = Net::HTTP.get_response(uri)
 
-	result = response.body
-
+		result = response.body
+	rescue
+		result = "0"
+	end
 	begin
 		return JSON.parse(result)['data'][0]['share_count']
 	rescue
@@ -527,12 +531,15 @@ def social_facebook_shares(url)
 end
 
 def social_twitter_shares(url)
-	uri = URI.parse("https://cdn.api.twitter.com/1/urls/count.json?url=#{url}")
+	begin
+		uri = URI.parse("https://cdn.api.twitter.com/1/urls/count.json?url=#{url}")
 
-	response = Net::HTTP.get_response(uri)
+		response = Net::HTTP.get_response(uri)
 
-	result = response.body
-
+		result = response.body
+	rescue
+		result = "0"
+	end
 	begin
 		return JSON.parse(result)['count']
 	rescue
@@ -540,12 +547,54 @@ def social_twitter_shares(url)
 	end	
 end
 
+def update_user_items(user_id)
+	user_keywords = get_user_keywords(user_id)
+
+	top_items = []
+
+	user_keywords.each do |user_keyword|
+
+		#get top item for specific keyword
+		item_key = get_top_item(user_keyword)[0].to_s
+
+		source_id = item_key.split("/").first
+
+		item_id = item_key.split("/", 2).last
+
+		puts "Source ID: #{source_id}"
+		puts "Item ID: #{item_key}"
+
+		top_items << get_item_url(source_id, item_id)
+
+	end
+	return top_items
+end
+
+def get_user_keywords(user_id)
+	#gets all members of sorted list
+	return Current_database.zrevrange("users:#{user_id}:keywords", 0, -1)
+end
+
+def get_username_from_id(user_id)
+	return Current_database.hget("users:#{user_id}:meta", "username")
+end
+
+def get_top_item(keyword)
+	return Current_database.zrevrange("keywords:#{keyword}", 0, 0)
+end
+
+def get_item_url(source_id, item_id)
+	return Current_database.hget("items:#{source_id}:#{item_id}:meta", "url")
+end
+
+def get_attribute(hash, attribute)
+	return Current_database.hget("items:#{@source_id}:#{@id}:#{hash}", attribute)
+end
+
 if __FILE__ == $0
 
 	#constant item update interval in seconds
-	Item_update_interval = 900
-
-	Rescan_interval = 1800
+	Item_update_interval = 1800
 
 	Number_of_threads = 15
 
