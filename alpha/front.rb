@@ -1,5 +1,6 @@
 require 'sinatra'
 require 'redis'
+require 'devise'
 
 require_relative 'main.rb'
 
@@ -16,13 +17,15 @@ end
 
 get '/' do
 
-  @current_user_id = 0
+  current_user_id = 0
 
-  @current_username = get_username_from_id(@current_user_id)
+  @current_user = User.new(current_user_id)
 
-  @user_keywords = get_user_keywords(@current_user_id)
+  @current_username = @current_user.get_username_from_id
 
-  @top_items = update_user_items(@current_user_id)
+  @user_keywords = @current_user.get_user_keywords
+
+  @top_items = @current_user.update_user_items
 
   erb :index
 end

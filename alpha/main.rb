@@ -40,6 +40,14 @@ $full_content_timeouts = 0
 
 $keywords_errors = 0
 
+#
+#
+#
+# SOURCE CLASS
+#
+#
+#
+
 class Source
 
 	attr_accessor :id
@@ -76,6 +84,14 @@ class Source
 	end
 
 end
+
+#
+#
+#
+# ITEM CLASS
+#
+#
+#
 
 class Item
 
@@ -422,6 +438,56 @@ class Item
 
 end
 
+#
+#
+#
+# USER CLASS
+#
+#
+#
+
+class User
+	attr_accessor :id
+
+	def initialize(id)
+		# Instance variables
+		@id = id
+		puts id
+	end
+
+	def update_user_items
+	user_keywords = get_user_keywords
+
+	top_items = []
+
+		user_keywords.each do |user_keyword|
+
+			#get top item for specific keyword
+			item_key = get_top_item(user_keyword)[0].to_s
+
+			source_id = item_key.split("/").first
+
+			item_id = item_key.split("/", 2).last
+
+			puts "Source ID: #{source_id}"
+			puts "Item ID: #{item_key}"
+
+			top_items << get_item_url(source_id, item_id)
+
+		end
+		return top_items
+	end
+
+	def get_user_keywords
+		#gets all members of sorted list
+		return Current_database.zrevrange("users:#{@id}:keywords", 0, -1)
+	end
+
+	def get_username_from_id
+		return Current_database.hget("users:#{@id}:meta", "username")
+	end
+end
+
 def get_total_sources(databaseConnection)
 	return databaseConnection.get("source:next_id").to_i
 end
@@ -545,38 +611,6 @@ def social_twitter_shares(url)
 	rescue
 		return "0"
 	end	
-end
-
-def update_user_items(user_id)
-	user_keywords = get_user_keywords(user_id)
-
-	top_items = []
-
-	user_keywords.each do |user_keyword|
-
-		#get top item for specific keyword
-		item_key = get_top_item(user_keyword)[0].to_s
-
-		source_id = item_key.split("/").first
-
-		item_id = item_key.split("/", 2).last
-
-		puts "Source ID: #{source_id}"
-		puts "Item ID: #{item_key}"
-
-		top_items << get_item_url(source_id, item_id)
-
-	end
-	return top_items
-end
-
-def get_user_keywords(user_id)
-	#gets all members of sorted list
-	return Current_database.zrevrange("users:#{user_id}:keywords", 0, -1)
-end
-
-def get_username_from_id(user_id)
-	return Current_database.hget("users:#{user_id}:meta", "username")
 end
 
 def get_top_item(keyword)
