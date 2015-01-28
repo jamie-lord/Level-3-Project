@@ -34,23 +34,17 @@
             padding-bottom: 1em;
             height: 2em;
         }
-        #submit {
-            border:none;
-            background:#ff4b33;
-            padding:10px;
-        }
-        #submit:hover {
-            background:#ff7866;
-        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome <%= @current_username %></h1>
+        <h1>Welcome <%= @userName %></h1>
         <p>Some news for you...</p>
-        <%@top_items.each do |url| %>
+        <%@topItems.each do |url| %>
         <div>
             <a href="<%= url %>" target="_blank"><%= url %></a>
+            <a href="<%= @userId %>/like?url=<%= url %>">Like</a>
+            <a href="<%= @userId %>/dislike?url=<%= url %>">Dislike</a>
         </div>
         <% end %>
     </div>

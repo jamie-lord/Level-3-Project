@@ -9,39 +9,56 @@ set :bind, '0.0.0.0'
 helpers do
   include Rack::Utils
   alias_method :h, :escape_html
-
-  def random_string(length)
-    rand(36**length).to_s(36)
-  end
 end
 
 get '/' do
   # NOTHING
 end
 
+get '/:userid/like' do
+
+  if params[:url] != nil
+
+    @userId = params[:userid]
+
+    user = User.new(@userId)
+
+    user.addLike(params[:url])
+
+    redirect "/" + @userId
+  end
+end
+
+get '/:userid/dislike' do
+
+  if params[:url] != nil
+
+    @userId = params[:userid]
+
+    user = User.new(@userId)
+
+    user.addDislike(params[:url])
+
+    redirect "/" + @userId
+  end
+end
+
 get '/:userid' do
 
-  current_user = User.new(params[:userid])
+  @userId = params[:userid]
 
-  @current_username = current_user.get_username_from_id
+  user = User.new(@userId)
 
-  @user_keywords = current_user.get_user_keywords
+  @userName = user.getUsernameFromId
 
-  @top_items = current_user.get_top_items
+  @userKeywords = user.getUserKeywords
+
+  @topItems = user.getTopItems
 
   erb :index
+
 end
 
-#update
 post '/' do
-  # if params[:url] and not params[:url].empty?
-  #   @shortcode = random_string 5
-  #   Current_database.setnx "links:#{@shortcode}", params[:url]
-  # end
   erb :index
-end
-
-get '/:shortcode' do
-  @url = Current_database.get "links:#{params[:shortcode]}"
-  redirect to(@url) || '/'
 end
