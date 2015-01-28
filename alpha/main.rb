@@ -452,10 +452,25 @@ class User
 	def initialize(id)
 		# Instance variables
 		@id = id
-		puts id
 	end
 
-	def update_user_items
+	def add_like(url)
+		Current_database.sadd("users:#{@id}:like", url)
+	end
+
+	def add_dislike(url)
+		Current_database.sadd("users:#{@id}:dislike", url)
+	end
+
+	def remove_like(url)
+		Current_database.srem("users:#{@id}:like", url)		
+	end
+
+	def remove_dislike(url)
+		Current_database.srem("users:#{@id}:dislike", url)		
+	end
+
+	def get_top_items
 	user_keywords = get_user_keywords
 
 	top_items = []
@@ -469,13 +484,18 @@ class User
 
 			item_id = item_key.split("/", 2).last
 
-			puts "Source ID: #{source_id}"
-			puts "Item ID: #{item_key}"
-
 			top_items << get_item_url(source_id, item_id)
 
 		end
 		return top_items
+	end
+
+	def add_stream(weight, global_id)
+		Current_database.zadd("users:@id:stream", weight, global_id)
+	end
+
+	def remove_stream(global_id)
+		Current_database.zrem("users:@id:stream", global_id)
 	end
 
 	def get_user_keywords

@@ -16,26 +16,28 @@ helpers do
 end
 
 get '/' do
+  # NOTHING
+end
 
-  current_user_id = 0
+get '/:userid' do
 
-  @current_user = User.new(current_user_id)
+  current_user = User.new(params[:userid])
 
-  @current_username = @current_user.get_username_from_id
+  @current_username = current_user.get_username_from_id
 
-  @user_keywords = @current_user.get_user_keywords
+  @user_keywords = current_user.get_user_keywords
 
-  @top_items = @current_user.update_user_items
+  @top_items = current_user.get_top_items
 
   erb :index
 end
 
 #update
 post '/' do
-  if params[:url] and not params[:url].empty?
-    @shortcode = random_string 5
-    Current_database.setnx "links:#{@shortcode}", params[:url]
-  end
+  # if params[:url] and not params[:url].empty?
+  #   @shortcode = random_string 5
+  #   Current_database.setnx "links:#{@shortcode}", params[:url]
+  # end
   erb :index
 end
 
