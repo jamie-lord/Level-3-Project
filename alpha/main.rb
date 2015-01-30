@@ -48,6 +48,10 @@ def getTotalSources(databaseConnection)
 	return databaseConnection.get("source:next_id").to_i
 end
 
+def incrTotalSources()
+	CurrentDatabase.incr("source:next_id")
+end
+
 def stripUrl(url)
   url.sub!(/https\:\/\/www./, '') if url.include? "https://www."
 
@@ -60,6 +64,38 @@ def stripUrl(url)
   url = url.tr('^A-Za-z0-9\.\/','')
 
   return url
+end
+
+def getSourceId(url)
+	sourceId = CurrentDatabase.zscore("source:directory", url)
+	if sourceId == nil
+		return nil
+	else
+		return sourceId.to_i
+	end
+end
+
+def addNewSource(url)
+	if getSourceId(url) == nil
+		id = getTotalSources(CurrentDatabase)
+		incrTotalSources
+		newSource = Source.new(id)
+		CurrentDatabase.hmset("source:#{id}","url", url)
+		CurrentDatabase.zadd("source:directory", id, url)
+	else
+		puts "Source already exists!"
+	end
+end
+
+def updateSourceDirectory()
+	totalItems = getTotalSources(CurrentDatabase).to_i
+
+	totalItems.times do |i|
+
+		url = CurrentDatabase.hget("source:#{i}", "url").to_s
+
+		CurrentDatabase.zadd("source:directory", i, url)
+	end
 end
 
 def followUrlRedirect(url)

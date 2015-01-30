@@ -1,0 +1,29 @@
+if url not liked
+	get source
+
+	does source exist? no:
+		add source
+		add item
+		get item keywords
+		foreach keyword
+			increment keyword score in user dictionary
+	yes:
+		get source id
+		make global id
+		does item exist? no:
+			add item
+			get item keywords
+			foreach keyword
+				increment keyword score in user dictionary
+
+	remove like
+	add to liked
+else
+	remove like
+
+foreach user keyword
+	get top item and score
+	get item keywords
+	foreach user negative keyword
+		subtract from useritemscore
+	add to temp array

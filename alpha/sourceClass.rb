@@ -8,7 +8,9 @@ class Source
 		# Instance variables
 		@id = id
 		@url = self.getUrl
-		@feed = self.getFeed
+		if @url != nil
+			@feed = self.getFeed
+		end
 	end
 
 	def getUrl
@@ -16,7 +18,7 @@ class Source
 	end
 
 	def setLastScanNow
-		CurrentDatabase.hmset("source:#{@id}","last_scan",Time.now.to_i)
+		CurrentDatabase.hmset("source:#{@id}","lastScan",Time.now.to_i)
 	end
 
 	def getFeed
