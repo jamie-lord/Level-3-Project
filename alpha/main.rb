@@ -19,8 +19,10 @@ require_relative 'itemClass.rb'
 #constant database host
 DatabaseHost = "192.168.0.13"
 
+DatabaseNumber = 3
+
 #constant database connetion
-CurrentDatabase = Redis.new(:host => DatabaseHost, :port => 6379, :db => 0)
+CurrentDatabase = Redis.new(:host => DatabaseHost, :port => 6379, :db => DatabaseNumber)
 
 StartTime = Time.now.to_i
 
@@ -44,12 +46,12 @@ $fullConentTimeouts = 0
 
 $keywordsErrors = 0
 
-def getTotalSources(databaseConnection)
-	return databaseConnection.get("source:next_id").to_i
+def getTotalSources()
+	return CurrentDatabase.get("sources:nextId").to_i
 end
 
 def incrTotalSources()
-	CurrentDatabase.incr("source:next_id")
+	CurrentDatabase.incr("sources:nextId")
 end
 
 def stripUrl(url)
@@ -67,7 +69,7 @@ def stripUrl(url)
 end
 
 def getSourceId(url)
-	sourceId = CurrentDatabase.zscore("source:directory", url)
+	sourceId = CurrentDatabase.zscore("sources:directory", url)
 	if sourceId == nil
 		return nil
 	else
@@ -77,24 +79,24 @@ end
 
 def addNewSource(url)
 	if getSourceId(url) == nil
-		id = getTotalSources(CurrentDatabase)
+		id = getTotalSources
 		incrTotalSources
 		newSource = Source.new(id)
-		CurrentDatabase.hmset("source:#{id}","url", url)
-		CurrentDatabase.zadd("source:directory", id, url)
+		CurrentDatabase.hmset("sources:#{id}","url", url)
+		CurrentDatabase.zadd("sources:directory", id, url)
 	else
 		puts "Source already exists!"
 	end
 end
 
 def updateSourceDirectory()
-	totalItems = getTotalSources(CurrentDatabase).to_i
+	totalItems = getTotalSources.to_i
 
 	totalItems.times do |i|
 
-		url = CurrentDatabase.hget("source:#{i}", "url").to_s
+		url = CurrentDatabase.hget("sources:#{i}", "url").to_s
 
-		CurrentDatabase.zadd("source:directory", i, url)
+		CurrentDatabase.zadd("sources:directory", i, url)
 	end
 end
 
@@ -109,46 +111,49 @@ def followUrlRedirect(url)
 end
 
 def sanitiseHtml(source)
-	return ActionView::Base.fullSanitizer.sanitize(Readability::Document.new(source).content).squeeze(" ").strip
+	return ActionView::Base.full_sanitizer.sanitize(Readability::Document.new(source).content).squeeze(" ").strip
 end
 
 def scanSource(id)
 	#create source object
 	currentSource = Source.new(id)
 
-	#output current source information
-	#current_source.output_source_info
 
 	#for each item
-	currentSource.feed.entries.each do |entry|
+	begin
+		currentSource.feed.entries.each do |entry|
 
-		#create item object
-		currentItem = Item.new(id, entry)
+			#create item object
+			currentItem = Item.new(id, entry)
 
-		$itemsCompleted += 1
+			$itemsCompleted += 1
 
-		# if current_item.status != "not_updated"
-		# 	current_item.output_item_meta
-		# end
+			# if current_item.status != "not_updated"
+			# 	current_item.output_item_meta
+			# end
 
-		system "clear"
+			system "clear"
 
-		#runtime statistics
-		puts "\n>>>>>>>>>>>>>>>>RUNTIME INFORMATION<<<<<<<<<<<<<<<<<"
-		puts "\nTime running:\t\t\t\t#{Time.now.to_i - StartTime} seconds"
-		puts "\nSources completed:\t\t\t#{$sourcesCompleted}"
-		puts "\nItems completed:\t\t\t#{$itemsCompleted}"
-		puts "\nNew items:\t\t\t\t#{$newItems}".green
-		puts "\nUpdated items:\t\t\t\t#{$updatedItems}".blue
-		puts "\nItems not updated:\t\t\t#{$notUpdatedItems}".yellow
-		puts "\nItems not added:\t\t\t#{$notAddedItems}".yellow
-		puts "\nFull content errors:\t\t\t#{$fullContentErrors}".red
-		puts "\nFull content timeouts:\t\t\t#{$fullConentTimeouts}".red
-		puts "\nKeyword errors:\t\t\t\t#{$keywordsErrors}".red
-		puts "\nLast item:\t\t\t\titem:#{currentItem.sourceId}:#{currentItem.id}"
-		puts "\n>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<"
+			#runtime statistics
+			puts "\n>>>>>>>>>>>>>>>>RUNTIME INFORMATION<<<<<<<<<<<<<<<<<"
+			puts "\nTime running:\t\t\t\t#{Time.now.to_i - StartTime} seconds"
+			puts "\nSources completed:\t\t\t#{$sourcesCompleted}"
+			puts "\nItems completed:\t\t\t#{$itemsCompleted}"
+			puts "\nNew items:\t\t\t\t#{$newItems}".green
+			puts "\nUpdated items:\t\t\t\t#{$updatedItems}".blue
+			puts "\nItems not updated:\t\t\t#{$notUpdatedItems}".yellow
+			puts "\nItems not added:\t\t\t#{$notAddedItems}".yellow
+			puts "\nFull content errors:\t\t\t#{$fullContentErrors}".red
+			puts "\nFull content timeouts:\t\t\t#{$fullConentTimeouts}".red
+			puts "\nKeyword errors:\t\t\t\t#{$keywordsErrors}".red
+			puts "\nLast item:\t\t\t\titem:#{currentItem.sourceId}:#{currentItem.id}"
+			puts "\n>>>>>>>>>>>>>>>>>>>>>>>>>><<<<<<<<<<<<<<<<<<<<<<<<<<"
 
-	end
+		end
+	rescue
+		currentSource.setScanError
+		puts "\nENTRIES ERROR".red
+	end	
 
 	$sourcesCompleted += 1
 
@@ -206,11 +211,17 @@ def socialTwitterShares(url)
 end
 
 def getTopItem(keyword)
-	return CurrentDatabase.zrevrange("keywords:#{keyword}", 0, 0)
+	keywordArr = CurrentDatabase.zrevrange("keywords:#{keyword}", 0, 0)
+	keyword = keywordArr[0].to_s
+	return keyword
 end
 
 def getItemUrl(sourceId, itemId)
 	return CurrentDatabase.hget("items:#{sourceId}:#{itemId}:meta", "url")
+end
+
+def getItemMeta(sourceId, itemId, key)
+	return CurrentDatabase.hget("items:#{sourceId}:#{itemId}:meta", key)
 end
 
 def getAttribute(hash, attribute)
@@ -230,9 +241,9 @@ if __FILE__ == $0
 	puts "\nItem update interval:\t\t\t#{ItemUpdateInterval/60} minutes"
 	puts "\n*************************************************************"
 
-	while true
+	#while true
 
-		TotalItems = getTotalSources(CurrentDatabase)
+		TotalItems = getTotalSources
 
 		#starting source id, default = 0
 		sourceId = 0
@@ -271,6 +282,6 @@ if __FILE__ == $0
 
 		threads.each(&:join)
 
-	end
+	#end
 
 end

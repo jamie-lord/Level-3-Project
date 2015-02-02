@@ -25,8 +25,8 @@ class Item
 		unixTimeNow = Time.now.to_i
 
 	    #unique item id
-	    if entry.entryId != nil
-	    	@id = stripUrl(entry.entryId)
+	    if entry.entry_id != nil
+	    	@id = stripUrl(entry.entry_id)
 	    elsif entry.id != nil
 	    	@id = stripUrl(entry.id)
 	    elsif entry.url != nil

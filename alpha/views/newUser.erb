@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Project</title>
+    <title>Project - New User</title>
     <style>
         body {
             font-family: 'Open Sans', sans-serif;
@@ -39,16 +39,15 @@
 <body>
     <div class="container">
         <h1>Welcome <%= @name %></h1>
-        <p>Some news for you...</p>
-        <%@stream.each do |item|
-            url = item[0]
-            title = item[1]
-            %>
-        <div>
-            <a href="<%= url %>" target="_blank"><%= title %></a>
-            <a href="<%= @name %>/like?url=<%= url %>">Like</a>
-            <a href="<%= @name %>/dislike?url=<%= url %>">Dislike</a>
-        </div>
-        <% end %>
+        <p>It looks like you're a new user.</p>
+        <p>Please enter at least one URL of a news item you find interesting...</p>
+        <form action="<%= @name %>/likeSeed" method="post">
+            <input type="text" name="url0" required>
+            <input type="text" name="url1">
+            <input type="text" name="url2">
+            <input type="text" name="url3">
+            <input type="text" name="url4">
+            <input type="submit">
+        </form>
     </div>
 </body>

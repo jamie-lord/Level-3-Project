@@ -4,26 +4,33 @@ class Source
 	attr_accessor :url
 	attr_accessor :feed
 
-	def initialize(id)
+	def initialize(sourceId)
 		# Instance variables
-		@id = id
+		@id = sourceId
+		#puts @id
 		@url = self.getUrl
+		#puts @url
 		if @url != nil
 			@feed = self.getFeed
 		end
+		#puts @feed
 	end
 
 	def getUrl
-		return CurrentDatabase.hget("source:#{@id}", "url")
+		return CurrentDatabase.hget("sources:#{@id}", "url").to_s
 	end
 
 	def setLastScanNow
-		CurrentDatabase.hmset("source:#{@id}","lastScan",Time.now.to_i)
+		CurrentDatabase.hmset("sources:#{@id}", "lastScan", Time.now.to_i)
+	end
+
+	def setScanError
+		CurrentDatabase.hmset("sources:#{@id}", "scanError", Time.now.to_i)
 	end
 
 	def getFeed
 		#get the RSS feed from source URL
-		return Feedjira::Feed.fetchAndParse @url
+		return Feedjira::Feed.fetch_and_parse @url
 	end
 
 	def outputSourceInfo

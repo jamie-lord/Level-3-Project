@@ -15,48 +15,88 @@ get '/' do
   # NOTHING
 end
 
-get '/:userid/like' do
+get '/:name/like' do
 
   if params[:url] != nil
 
-    @userId = params[:userid]
+    @name = params[:name]
 
-    user = User.new(@userId)
+    user = User.new(@name)
 
     user.addLike(params[:url])
 
-    redirect "/" + @userId
+    user.updateStream
+
+    redirect "/" + @name
   end
 end
 
-get '/:userid/dislike' do
+get '/:name/dislike' do
 
   if params[:url] != nil
 
-    @userId = params[:userid]
+    @name = params[:name]
 
-    user = User.new(@userId)
+    user = User.new(@name)
 
     user.addDislike(params[:url])
 
-    redirect "/" + @userId
+    user.updateStream
+
+    redirect "/" + @name
   end
 end
 
-get '/:userid' do
+get '/:name' do
 
-  @userId = params[:userid]
+  @name = params[:name]
 
-  user = User.new(@userId)
+  user = User.new(@name)
 
-  @userName = user.getUsernameFromId
+  if user.newUser == true
+     erb :newUser
+  else
 
-  @userKeywords = user.getUserKeywords
+    user.updateStream
 
-  @topItems = user.getTopItems
+    @stream = user.getStream
 
-  erb :index
+    erb :index
+  end
+end
 
+post '/:name/likeSeed' do
+
+  if params[:url0] != nil
+
+    @name = params[:name]
+
+    user = User.new(@name)
+
+    user.addLike(params[:url0])
+
+    if params[:url1] != nil
+      user.addLike(params[:url1])
+    end
+
+    if params[:url2] != nil
+      user.addLike(params[:url2])
+    end
+
+    if params[:url3] != nil
+      user.addLike(params[:url3])
+    end
+
+    if params[:url4] != nil
+      user.addLike(params[:url4])
+    end
+
+    user.toggleNew
+
+    user.updateStream
+
+    redirect "/" + @name
+  end
 end
 
 post '/' do
