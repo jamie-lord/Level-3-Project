@@ -6,6 +6,8 @@ require_relative 'main.rb'
 
 set :bind, '0.0.0.0'
 
+set :port, 80
+
 helpers do
   include Rack::Utils
   alias_method :h, :escape_html
