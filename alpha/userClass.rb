@@ -21,7 +21,7 @@ class User
 	end
 
 	def addViewed(url)
-		CurrentDatabase.sadd("users:#{@name}:viewed", url)
+		CurrentDatabase.zadd("users:#{@name}:viewed", Time.now.to_i, url)
 	end
 
 	def addLike(url)
