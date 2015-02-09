@@ -1,54 +1,53 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <title>Project</title>
-    <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
-        }
-        .container {
-            width:400px;
-            margin:120px auto 0px auto;
-        }
-        h1 {
-            width:400px;
-            margin-bottom:12px;
-            text-align:center;
-            color:#ff4b33;
-            font-size:40px;
-            padding-bottom:8px;
-            border-bottom:2px solid #ff4b33;
-        }
-        form {
-            display:block;
-            width:400px;
-        }
-        input {
-            display:block;
-            float:left;
-            padding:8px;
-            font-size:16px;
-        }
-        div {
-            margin-bottom: 1em;
-            padding-bottom: 1em;
-            height: 2em;
-        }
-    </style>
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+    <!-- Enable tooltips for this page -->
+    <script type="text/javascript">
+        $(function () {
+          $('[data-toggle="tooltip"]').tooltip()
+      })
+    </script>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome <%= @name %></h1>
-        <p>Some news for you...</p>
-        <%@stream.each do |item|
-            url = item[0]
-            title = item[1]
-            %>
-        <div>
-            <a href="<%= url %>" target="_blank"><%= title %></a>
-            <a href="<%= @name %>/like?url=<%= url %>">Like</a>
-            <a href="<%= @name %>/dislike?url=<%= url %>">Dislike</a>
+        <div class="row">
+            <div class=".col-md-8 .col-md-offset-2">
+                <h1>Welcome <%= @name %></h1>
+                <h4>Some news for you...</h4>
+            </div>
         </div>
-        <% end %>
-    </div>
-</body>
+        <div class="row">
+            <div class=".col-md-8 .col-md-offset-2">
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <tbody>
+                            <%@stream.each do |item|
+                                url = item[0]
+                                title = item[1]
+                                source = item[2]
+                                %>
+                                <tr>
+                                    <td>
+                                        <h5><a href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a><small> <%= source %></small></h5>
+                                    </td>
+                                    <td>
+                                        <a class="btn btn-success" href="<%= @name %>/like?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="You find this item interesting"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
+                                        <a class="btn btn-danger" href="<%= @name %>/dislike?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="You dislike this item"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>
+                                        <a class="btn btn-warning" href="<%= @name %>/irrelevant?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is irrelevant to your interests"><span class="glyphicon glyphicon-trash" aria-hidden="true"></a>
+                                    </td>
+                                </tr>
+                                <% end %>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
