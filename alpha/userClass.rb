@@ -152,6 +152,14 @@ class User
 				item << sourceTitle
 			end
 
+			itemAuthor = getItemMeta(sourceId, itemId, "author")
+
+			if itemAuthor == nil || itemAuthor == ""
+				item << ""
+			else
+				item << itemAuthor
+			end
+
 			stream << item
 		end
 		return stream

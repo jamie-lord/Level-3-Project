@@ -33,10 +33,14 @@
                                 url = item[0]
                                 title = item[1]
                                 source = item[2]
+                                author = item[3]
                                 %>
                                 <tr>
                                     <td>
-                                        <h5><a href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a><small> <%= source %></small></h5>
+                                        <h5><a href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a><small> <%= source %>
+                                        <% if author.length > 2 && author != "undefined" && author != source %>
+                                           by <%= author %>
+                                        <%end%></small></h5>
                                     </td>
                                     <td>
                                         <a class="btn btn-success" href="<%= @name %>/like?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="You find this item interesting"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
