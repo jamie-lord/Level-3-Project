@@ -11,11 +11,12 @@ require "timeout"
 require "colorize"
 require "net/http"
 require "json"
+require "rss"
 
 #constant database host
 DatabaseHost = "192.168.0.13"
 
-DatabaseNumber = 3
+DatabaseNumber = 0
 
 #constant database connetion
 CurrentDatabase = Redis.new(:host => DatabaseHost, :port => 6379, :db => DatabaseNumber)
@@ -38,9 +39,44 @@ end
 
 def addNewSource(url)
 	newId = getNextSourceId
-	CurrentDatabase.hmset("sources:#{newId}", "url", url)
-	CurrentDatabase.hmset("sources:#{newId}", "lastScan", Time.now.to_i - 36000)
-	CurrentDatabase.incr("sources:nextId")
+	begin
+		url = URI.parse(url)
+		req = Net::HTTP.new(url.host, url.port)
+		res = req.request_head(url.path)
+
+		if res.code == "200"
+			begin
+				# What feed are we parsing?
+				rss_feed = url
+
+				# Variable for storing feed content
+				rss_content = ""
+
+				# Read the feed into rss_content
+				open(rss_feed) do |f|
+				   rss_content = f.read
+				end
+
+				# Parse the feed, dumping its contents to rss
+				rss = RSS::Parser.parse(rss_content, false)
+
+				# Output the feed title and website URL
+				puts "Title: #{rss.channel.title}"
+				puts "RSS URL: #{rss.channel.link}"
+				puts "Total entries: #{rss.items.size}"
+
+				title = rss.channel.title.to_s
+				
+			rescue
+				title = ""
+			end
+			CurrentDatabase.hmset("sources:#{newId}", "url", url)
+			CurrentDatabase.hmset("sources:#{newId}", "title", title)
+			CurrentDatabase.hmset("sources:#{newId}", "lastScan", Time.now.to_i - 36000)
+			CurrentDatabase.incr("sources:nextId")
+		end
+	rescue
+	end
 end
 
 def getNextSourceId

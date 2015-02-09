@@ -20,6 +20,10 @@ class User
 		CurrentDatabase.hmset("users:#{@name}:meta", "new", "false")
 	end
 
+	def addViewed(url)
+		CurrentDatabase.sadd("users:#{@name}:viewed", url)
+	end
+
 	def addLike(url)
 		CurrentDatabase.sadd("users:#{@name}:like", url)
 	end
@@ -139,6 +143,14 @@ class User
 			item << getItemMeta(sourceId, itemId, "url")
 
 			item << getItemMeta(sourceId, itemId, "title")
+
+			sourceTitle = getSourceMeta(sourceId, "title")
+
+			if sourceTitle == nil || sourceTitle == ""
+				item << ""
+			else
+				item << sourceTitle
+			end
 
 			stream << item
 		end

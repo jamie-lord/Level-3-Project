@@ -67,6 +67,24 @@ get '/:name' do
   end
 end
 
+get '/:name/redirect' do
+
+  if params[:url] != nil
+
+    @name = params[:name]
+
+    @url = params[:url]
+
+    user = User.new(@name)
+
+    user.addViewed(@url)
+
+    redirect @url
+  else
+    redirect "/" + @name
+  end
+end
+
 post '/:name/likeSeed' do
 
   if params[:url0] != nil

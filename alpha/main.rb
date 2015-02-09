@@ -19,7 +19,7 @@ require_relative 'itemClass.rb'
 #constant database host
 DatabaseHost = "192.168.0.13"
 
-DatabaseNumber = 3
+DatabaseNumber = 0
 
 #constant database connetion
 CurrentDatabase = Redis.new(:host => DatabaseHost, :port => 6379, :db => DatabaseNumber)
@@ -222,6 +222,11 @@ end
 
 def getItemMeta(sourceId, itemId, key)
 	return CurrentDatabase.hget("items:#{sourceId}:#{itemId}:meta", key)
+end
+
+def getSourceMeta(sourceId, key)
+	return CurrentDatabase.hget("sources:#{sourceId}", key)
+	
 end
 
 def getAttribute(hash, attribute)
