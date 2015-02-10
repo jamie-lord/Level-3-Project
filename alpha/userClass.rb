@@ -16,8 +16,17 @@ class User
 		end
 	end
 
+	def addToLog(message, type)
+		logTime = Time.now.strftime("%d/%m/%Y %H:%M:%S")
+		today = Time.now.strftime("%d/%m/%Y")
+		CurrentDatabase.sadd("logs:#{today}", "#{logTime} - #{type} - #{@name} - #{message}")
+		puts "#{logTime} - #{type} - #{@name} - #{message}".black.on_red
+	end
+
 	def toggleNew()
-		CurrentDatabase.hmset("users:#{@name}:meta", "new", "false")
+		currentState = CurrentDatabase.hmget("users:#{@name}:meta", "new").boolean
+		newState = !currentState
+		CurrentDatabase.hmset("users:#{@name}:meta", "new", newState)
 	end
 
 	def addViewed(url)
@@ -38,6 +47,10 @@ class User
 
 	def addDisliked(url)
 		CurrentDatabase.sadd("users:#{@name}:disliked", url)
+	end
+
+	def addIrrelevant(url)
+		CurrentDatabase.sadd("users:#{@name}:irrelevant", url)
 	end
 
 	def removeLike(url)
@@ -175,7 +188,6 @@ class User
 		url = getItemMeta(sourceId, itemId, "url").to_s
 
 		if isItemViewed(url) == false
-			puts "Adding item\t\t\t#{globalId}\t#{url}".blue
 			CurrentDatabase.zadd("users:#{@name}:stream", score, globalId)
 		else
 			removeStream(globalId)
@@ -184,16 +196,12 @@ class User
 
 	def isItemViewed(url)
 		if CurrentDatabase.sismember("users:#{@name}:liked", url) == true
-			puts "URL liked".yellow
 			return true
 		elsif CurrentDatabase.sismember("users:#{@name}:disliked", url) == true
-			puts "URL disliked".yellow
 			return true
 		elsif CurrentDatabase.sismember("users:#{@name}:like", url) == true
-			puts "URL like".yellow
 			return true
 		elsif CurrentDatabase.sismember("users:#{@name}:dislike", url) == true
-			puts "URL dislike".yellow
 			return true
 		else
 			return false
