@@ -2,52 +2,39 @@
 <html>
 <head>
     <title>Project - New User</title>
-    <style>
-        body {
-            font-family: 'Open Sans', sans-serif;
-        }
-        .container {
-            width:400px;
-            margin:120px auto 0px auto;
-        }
-        h1 {
-            width:400px;
-            margin-bottom:12px;
-            text-align:center;
-            color:#ff4b33;
-            font-size:40px;
-            padding-bottom:8px;
-            border-bottom:2px solid #ff4b33;
-        }
-        form {
-            display:block;
-            width:400px;
-        }
-        input {
-            display:block;
-            float:left;
-            padding:8px;
-            font-size:16px;
-        }
-        div {
-            margin-bottom: 1em;
-            padding-bottom: 1em;
-            height: 2em;
-        }
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom page style -->
+    <style type="text/css">
+        
     </style>
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+    <!-- Enable tooltips for this page -->
+    <script type="text/javascript">
+        $(function () {
+          $('[data-toggle="tooltip"]').tooltip()
+      })
+    </script>
 </head>
 <body>
     <div class="container">
-        <h1>Welcome <%= @name %></h1>
-        <p>It looks like you're a new user.</p>
-        <p>Please enter at least one URL of a news item you find interesting...</p>
-        <form action="<%= @name %>/likeSeed" method="post">
-            <input type="text" name="url0" required>
-            <input type="text" name="url1">
-            <input type="text" name="url2">
-            <input type="text" name="url3">
-            <input type="text" name="url4">
-            <input type="submit">
-        </form>
+        <div class="row">
+            <div class=".col-md-8 .col-md-offset-2">
+                <h1>Welcome <%= @name %></h1>
+                <p>It looks like you're a new user.</p>
+                <p>Please enter at least one URL of a news item you find interesting...</p>
+                <form action="<%= @name %>/likeSeed" method="post">
+                    <input type="text" name="url0" required>
+                    <input type="text" name="url1">
+                    <input type="text" name="url2">
+                    <input type="text" name="url3">
+                    <input type="text" name="url4">
+                    <input type="submit">
+                </form>
+            </div>
+        </div>
     </div>
 </body>

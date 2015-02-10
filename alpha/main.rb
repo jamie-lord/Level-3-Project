@@ -1,16 +1,17 @@
 #!/usr/bin/env ruby
 
-require "redis"
-require "base58"
-require "feedjira"
-require "open-uri"
 require "action_view"
-require "readability"
-require "highscore"
-require "timeout"
+require "base58"
 require "colorize"
-require "net/http"
+require "feedbag"
+require "feedjira"
+require "highscore"
 require "json"
+require "net/http"
+require "open-uri"
+require "readability"
+require "redis"
+require "timeout"
 
 require_relative 'userClass.rb'
 require_relative 'sourceClass.rb'
@@ -231,6 +232,10 @@ end
 
 def getAttribute(hash, attribute)
 	return CurrentDatabase.hget("items:#{@sourceId}:#{@id}:#{hash}", attribute)
+end
+
+def findFeedUrl(url)
+	return Feedbag.find url
 end
 
 if __FILE__ == $0

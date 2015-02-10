@@ -4,6 +4,15 @@
     <title>Project</title>
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom page style -->
+    <style type="text/css">
+        p {
+            margin: 0px
+        }
+        h5 > a :visited {
+            color:#999
+        }
+    </style>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <!-- Latest compiled and minified JavaScript -->
@@ -14,7 +23,6 @@
           $('[data-toggle="tooltip"]').tooltip()
       })
     </script>
-    <style type="text/css">h5>a:visited{color:#999}</style>
 </head>
 <body>
     <div class="container">
@@ -43,9 +51,11 @@
                                         <%end%></small></h5>
                                     </td>
                                     <td>
+                                    <p class="text-right">
                                         <a class="btn btn-success" href="<%= @name %>/like?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="You find this item interesting"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
                                         <a class="btn btn-danger" href="<%= @name %>/dislike?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="You dislike this item"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>
                                         <a class="btn btn-warning" href="<%= @name %>/irrelevant?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is irrelevant to your interests"><span class="glyphicon glyphicon-trash" aria-hidden="true"></a>
+                                    </p>
                                     </td>
                                 </tr>
                                 <% end %>
