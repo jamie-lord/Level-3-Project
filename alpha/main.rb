@@ -240,6 +240,8 @@ end
 
 if __FILE__ == $0
 
+	startTime = Time.now.strftime("%d/%m/%Y %H:%M:%S")
+
 	#constant item update interval in seconds
 	ItemUpdateInterval = 1800
 
@@ -291,6 +293,16 @@ if __FILE__ == $0
 		end
 
 		threads.each(&:join)
+
+		finishTime = Time.now.strftime("%d/%m/%Y %H:%M:%S")
+
+		puts "Started at #{startTime}".green
+
+		puts "Finished at #{finishTime}".green
+
+		runTime = (Time.parse(finishTime).to_i - Time.parse(startTime).to_i) / 60
+
+		puts "Time taken #{runTime} minutes".green
 
 	#end
 
