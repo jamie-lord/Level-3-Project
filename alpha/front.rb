@@ -87,7 +87,7 @@ get '/:name' do
 
     @stream = user.getStream
 
-    erb :index
+    erb :stream
   end
 end
 
