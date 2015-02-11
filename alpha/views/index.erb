@@ -34,6 +34,7 @@
         </div>
         <div class="row">
             <div class=".col-md-8 .col-md-offset-2">
+                <% if !@stream.empty? %>
                 <div class="table-responsive">
                     <table class="table table-hover">
                         <tbody>
@@ -46,23 +47,27 @@
                                 <tr>
                                     <td>
                                         <h5><a href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a><small> <%= source %>
-                                        <% if author.length > 2 && author != "undefined" && author != source %>
-                                           by <%= author %>
-                                        <%end%></small></h5>
+                                            <% if author.length > 2 && author != "undefined" && author != source %>
+                                            by <%= author %>
+                                            <%end%></small></h5>
                                     </td>
                                     <td>
-                                    <p class="text-right">
-                                        <a class="btn btn-success" href="<%= @name %>/like?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="You find this item interesting"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
-                                        <a class="btn btn-danger" href="<%= @name %>/dislike?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="You dislike this item"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>
-                                        <a class="btn btn-warning" href="<%= @name %>/irrelevant?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is irrelevant to your interests"><span class="glyphicon glyphicon-trash" aria-hidden="true"></a>
-                                    </p>
+                                        <p class="text-right">
+                                            <a class="btn btn-success" href="<%= @name %>/like?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is relevant to your interests and like it"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
+                                            <a class="btn btn-danger" href="<%= @name %>/dislike?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is relevant to your interests but you don't like it"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>
+                                            <a class="btn btn-primary" href="<%= @name %>/irrelevant?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is irrelevant to your interests"><span class="glyphicon glyphicon-trash" aria-hidden="true"></a>
+                                        </p>
                                     </td>
                                 </tr>
-                                <% end %>
-                            </tbody>
-                        </table>
+                                    <% end %>
+                                </tbody>
+                            </table>
+                        </div>
+                        <% end %>
+                        <% if @stream.empty? %>
+                        <p>Sadly there's nothing new for you to read at the moment.</p>
+                        <% end %>
                     </div>
                 </div>
             </div>
-        </div>
-    </body>
+        </body>
