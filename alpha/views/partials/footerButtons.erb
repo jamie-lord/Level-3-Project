@@ -1,0 +1,32 @@
+<p>
+	<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#addSource" aria-expanded="false" aria-controls="addSource">
+		Add a new source
+	</button>
+	<button class="btn btn-warning" type="button" data-toggle="collapse" data-target="#reportBug" aria-expanded="false" aria-controls="reportBug">
+		Report a bug
+	</button>
+</p>
+<div class="collapse" id="addSource">
+	<div class="well">
+		<form class="form-inline" action="<%= @name %>/addSource" method="post">
+			<div class="form-group">
+				<label for="url">URL</label>
+				<input type="url" class="form-control" name="url" placeholder="http://arstechnica.com/" required>
+			</div>
+			<button type="submit" class="btn btn-default">Submit</button>
+		</form>
+	</div>
+</div>
+<div class="collapse" id="reportBug">
+	<div class="well">
+		<p>
+			Well done! However trivial (or possibly major) the bug is, please fill in the form below providing as much detail as possible - how you discovered the issue, what browser you're using and anything else you think might be helpful in fixing the problem. I am truly grateful for your time.
+		</p>
+		<form class="form" action="<%= @name %>/reportBug" method="post">
+			<div class="form-group">
+				<textarea class="form-control" rows="3" name="report" placeholder="Please provide as much information as you can..." required></textarea>
+			</div>
+			<button type="submit" class="btn btn-default">Submit</button>
+		</form>
+	</div>
+</div>

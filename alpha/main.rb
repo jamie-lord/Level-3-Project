@@ -56,15 +56,18 @@ def incrTotalSources()
 end
 
 def stripUrl(url)
-  url.sub!(/https\:\/\/www./, '') if url.include? "https://www."
 
-  url.sub!(/http\:\/\/www./, '') if url.include? "http://www."
+	url = followUrlRedirect(url)
 
-  url.sub!(/www./, '') if url.include? "www."
+	url.sub!(/https\:\/\/www./, '') if url.include? "https://www."
 
-  url.sub!(/http\:\/\//, '') if url.include? "http://"
+	url.sub!(/http\:\/\/www./, '') if url.include? "http://www."
 
-  url = url.tr('^A-Za-z0-9\.\/','')
+	url.sub!(/www./, '') if url.include? "www."
+
+	url.sub!(/http\:\/\//, '') if url.include? "http://"
+
+	url = url.tr('^A-Za-z0-9\.\/','')
 
   return url
 end
@@ -102,13 +105,16 @@ def updateSourceDirectory()
 end
 
 def followUrlRedirect(url)
-  begin
-    open(url) do |response|
-      return response.base_uri.to_s
-    end
-  rescue
-    return url
-  end
+	url.split("#")[0]
+	begin
+		httpc = HTTPClient.new
+		resp = httpc.get(url)
+		open(url) do |resp|
+			return resp.base_uri.to_s
+		end
+	rescue
+		return url
+	end
 end
 
 def sanitiseHtml(source)

@@ -24,33 +24,45 @@ class User
 	end
 
 	def toggleNew()
-		currentState = CurrentDatabase.hmget("users:#{@name}:meta", "new").boolean
+		currentState = CurrentDatabase.hmget("users:#{@name}:meta", "new")
 		newState = !currentState
 		CurrentDatabase.hmset("users:#{@name}:meta", "new", newState)
 	end
 
 	def addViewed(url)
-		CurrentDatabase.zadd("users:#{@name}:viewed", Time.now.to_i, url)
+		if url =~ /\A#{URI::regexp}\z/
+			CurrentDatabase.zadd("users:#{@name}:viewed", Time.now.to_i, url)
+		end
 	end
 
 	def addLike(url)
-		CurrentDatabase.sadd("users:#{@name}:like", url)
+		if url =~ /\A#{URI::regexp}\z/
+			CurrentDatabase.sadd("users:#{@name}:like", url)
+		end
 	end
 
 	def addLiked(url)
-		CurrentDatabase.sadd("users:#{@name}:liked", url)
+		if url =~ /\A#{URI::regexp}\z/
+			CurrentDatabase.sadd("users:#{@name}:liked", url)
+		end
 	end
 
 	def addDislike(url)
-		CurrentDatabase.sadd("users:#{@name}:dislike", url)
+		if url =~ /\A#{URI::regexp}\z/
+			CurrentDatabase.sadd("users:#{@name}:dislike", url)
+		end
 	end
 
 	def addDisliked(url)
-		CurrentDatabase.sadd("users:#{@name}:disliked", url)
+		if url =~ /\A#{URI::regexp}\z/
+			CurrentDatabase.sadd("users:#{@name}:disliked", url)
+		end
 	end
 
 	def addIrrelevant(url)
-		CurrentDatabase.sadd("users:#{@name}:irrelevant", url)
+		if url =~ /\A#{URI::regexp}\z/
+			CurrentDatabase.sadd("users:#{@name}:irrelevant", url)
+		end
 	end
 
 	def removeLike(url)
@@ -126,7 +138,6 @@ class User
 		scoreKeyword = Array.new
 		keywords.each do |keyword|
 			scoreKeyword.push(keyword.weight, keyword.text)
-
 			if CurrentDatabase.zscore("users:#{@name}:likedKeywords", keyword.text) == nil
 				CurrentDatabase.zadd("users:#{@name}:likedKeywords", keyword.weight, keyword.text)
 			else
@@ -202,6 +213,8 @@ class User
 		elsif CurrentDatabase.sismember("users:#{@name}:like", url) == true
 			return true
 		elsif CurrentDatabase.sismember("users:#{@name}:dislike", url) == true
+			return true
+		elsif CurrentDatabase.sismember("users:#{@name}:irrelevant", url) == true
 			return true
 		else
 			return false

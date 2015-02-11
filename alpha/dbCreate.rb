@@ -31,7 +31,9 @@ def addSources()
 	sourcesFile.gsub!(/\r\n?/, "\n")
 	sourcesFile.each_line do |url|
 
-		addNewSource(url.strip)
+		finalUrl = getUltimateUrl(url)
+
+		addNewSource(finalUrl.strip)
 
 	end
 
@@ -70,9 +72,7 @@ def addNewSource(url)
 			rescue
 				title = ""
 			end
-			CurrentDatabase.hmset("sources:#{newId}", "url", url)
-			CurrentDatabase.hmset("sources:#{newId}", "title", title)
-			CurrentDatabase.hmset("sources:#{newId}", "lastScan", Time.now.to_i - 36000)
+			CurrentDatabase.hmset("sources:#{newId}", "url", url, "title", title, "lastScan", Time.now.to_i - 36000)
 			CurrentDatabase.incr("sources:nextId")
 		end
 	rescue
@@ -95,8 +95,19 @@ def addSourceDirectory()
 end
 
 def addUser(name)
-	CurrentDatabase.hmset("users:#{name}:meta", "name", name)
-	CurrentDatabase.hmset("users:#{name}:meta", "new", "true")
+	CurrentDatabase.hmset("users:#{name}:meta", "name", name, "new", "true")
+end
+
+def getUltimateUrl(url)
+	begin
+		httpc = HTTPClient.new
+		resp = httpc.get(url)
+		open(url) do |resp|
+			return resp.base_uri.to_s
+		end
+	rescue
+		return url
+	end	
 end
 
 if __FILE__ == $0
@@ -105,5 +116,6 @@ if __FILE__ == $0
 	addSources
 	addSourceDirectory
 	addUser("jamie")
+	addUser("john")
 
 end

@@ -151,6 +151,40 @@ post '/:name/likeSeed' do
   end
 end
 
+post '/:name/addSource' do
+
+  @name = params[:name]
+
+  @url = params[:url]
+
+  user = User.new(@name)
+
+  if @url != nil
+    user.addToLog("Added new source #{@url}", "INFO")
+  else
+    user.addToLog("Failed to enter new source", "WARNING")
+  end
+
+  redirect "/" + @name
+end
+
+post '/:name/reportBug' do
+
+  @name = params[:name]
+
+  @report = params[:report]
+
+  user = User.new(@name)
+
+  if @report != nil
+    user.addToLog("Bug reported: #{@report}", "BUG")
+  else
+    user.addToLog("Failed to add bug report", "WARNING")
+  end
+
+  redirect "/" + @name
+end
+
 post '/' do
   erb :index
 end

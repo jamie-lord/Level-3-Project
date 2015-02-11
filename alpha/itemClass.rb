@@ -49,29 +49,13 @@ class Item
 
 	    		timeSinceLastscan(getAttribute("meta", "lastScan"))
 
-	    		#update title
-		        updateAttribute("meta", "title", @title)
-
-		        #update url
-		        updateAttribute("meta", "url", @url)
-
 		        #update published date and time
 		        updateDateAttribute("meta", "published", @published)
-
-		        #update item author
-		        updateAttribute("meta", "author", @author)
-
-		        #update item summary
-		        updateAttribute("meta", "summary", @summary)
 
 				#update saved keywords
 		        self.generateAndSetKeywords
 
-		        updateAttribute("meta", "facebookLikes", @facebookLikes)
-
-		        updateAttribute("meta", "facebookShares", @facebookShares)
-
-		        updateAttribute("meta", "twitterShares", @twitterShares)
+		        CurrentDatabase.hmset("items:#{@sourceId}:#{@id}:meta", "title", @title, "url", @url, "author", @author, "summary", @summary, "facebookLikes", @facebookLikes, "facebookShares", @facebookShares, "twitterShares", @twitterShares)
 
 		        #update lastScan time
 		        updateDateAttribute("meta", "lastScan", unixTimeNow)
@@ -187,15 +171,6 @@ class Item
 	def timeSinceLastscan(timestamp)
 		if SuppressOutput != true
 			puts "\nTime since last scan:\t\t\t#{Time.now.to_i - timestamp.to_i} seconds\n"
-		end
-	end
-
-	def updateAttribute(hash, attribute, value)
-		if getAttribute(hash, attribute) != value
-			if SuppressOutput != true
-				puts "Updating:\t#{attribute}".yellow
-			end
-			setAttribute(hash, attribute, value)
 		end
 	end
 

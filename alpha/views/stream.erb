@@ -6,7 +6,7 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom page style -->
     <style type="text/css">
-        p {
+        p.streamButtons {
             margin: 0px
         }
         h5 > a :visited {
@@ -35,10 +35,10 @@
         <div class="row">
             <div class=".col-md-8 .col-md-offset-2">
                 <% if !@stream.empty? %>
-                <div class="table-responsive">
-                    <table class="table table-hover">
-                        <tbody>
-                            <%@stream.each do |item|
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <tbody>
+                                <%@stream.each do |item|
                                 url = item[0]
                                 title = item[1]
                                 source = item[2]
@@ -46,28 +46,35 @@
                                 %>
                                 <tr>
                                     <td>
-                                        <h5><a href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a><small> <%= source %>
+                                        <h5>
+                                            <a href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a><small> <%= source %>
                                             <% if author.length > 2 && author != "undefined" && author != source %>
                                             by <%= author %>
-                                            <%end%></small></h5>
+                                            <%end%></small>
+                                        </h5>
                                     </td>
                                     <td>
-                                        <p class="text-right">
+                                        <p class="text-right streamButtons">
                                             <a class="btn btn-success" href="<%= @name %>/like?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is relevant to your interests and like it"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
                                             <a class="btn btn-danger" href="<%= @name %>/dislike?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is relevant to your interests but you don't like it"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>
                                             <a class="btn btn-primary" href="<%= @name %>/irrelevant?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is irrelevant to your interests"><span class="glyphicon glyphicon-trash" aria-hidden="true"></a>
                                         </p>
                                     </td>
                                 </tr>
-                                    <% end %>
-                                </tbody>
-                            </table>
-                        </div>
-                        <% end %>
-                        <% if @stream.empty? %>
-                        <p>Sadly there's nothing new for you to read at the moment.</p>
-                        <% end %>
+                                <% end %>
+                            </tbody>
+                        </table>
                     </div>
-                </div>
+                <% end %>
+                <% if @stream.empty? %>
+                    <p>Sadly there's nothing new for you to read at the moment.</p>
+                <% end %>
             </div>
-        </body>
+        </div>
+        <div class="row">
+            <div class=".col-md-8 .col-md-offset-2">
+            <%=erb :'partials/footerButtons'%>
+            </div>
+        </div>
+    </div>
+</body>
