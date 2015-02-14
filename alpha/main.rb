@@ -86,13 +86,50 @@ end
 
 def addNewSource(url)
 	if getSourceId(url) == nil
-		id = getTotalSources
-		incrTotalSources
-		newSource = Source.new(id)
-		CurrentDatabase.hmset("sources:#{id}","url", url)
-		CurrentDatabase.zadd("sources:directory", id, url)
+		begin
+			url = URI.parse(url)
+			req = Net::HTTP.new(url.host, url.port)
+			res = req.request_head(url.path)
+
+			if res.code == "200"
+				begin
+					id = getTotalSources
+
+					# Variable for storing feed content
+					rss_content = ""
+
+					# Read the feed into rss_content
+					open(url) do |f|
+					   rss_content = f.read
+					end
+
+					# Parse the feed, dumping its contents to rss
+					rss = RSS::Parser.parse(rss_content, false)
+
+					title = rss.channel.title.to_s
+
+					# Output the feed title and website URL
+					puts "Title: #{title}"
+					puts "RSS URL: #{rss.channel.link}"
+					puts "Total entries: #{rss.items.size}"
+
+				rescue
+					title = ""
+				end
+				CurrentDatabase.hmset("sources:#{id}", "url", url, "title", title, "lastScan", Time.now.to_i - 36000)
+				CurrentDatabase.zadd("sources:directory", id, url)
+				CurrentDatabase.incr("sources:nextId")
+				return "Source: #{url} successfully added"
+			else
+				return "Source: #{url} returned code != 200"
+			end
+		rescue
+			return "Source: #{url} exception thrown"
+		end
 	else
+		return "Source: #{url} already exists"
 		puts "Source already exists!"
+
 	end
 end
 
@@ -252,6 +289,18 @@ def doesUserExist(name)
 	return CurrentDatabase.exists("users:#{name}:meta")
 end
 
+def getUltimateUrl(url)
+	begin
+		httpc = HTTPClient.new
+		resp = httpc.get(url)
+		open(url) do |resp|
+			return resp.base_uri.to_s
+		end
+	rescue
+		return url
+	end	
+end
+
 if __FILE__ == $0
 
 	startTime = Time.now.strftime("%d/%m/%Y %H:%M:%S")
@@ -268,8 +317,6 @@ if __FILE__ == $0
 	puts "\nDatabase host:\t\t\t#{DatabaseHost}"
 	puts "\nItem update interval:\t\t\t#{ItemUpdateInterval/60} minutes"
 	puts "\n*************************************************************"
-
-	#while true
 
 		TotalItems = getTotalSources
 
@@ -320,6 +367,22 @@ if __FILE__ == $0
 
 		puts "Time taken #{runTime} minutes".green
 
-	#end
+		reportToSend = "Started at\t\t\t#{startTime}\n
+Finished at\t\t\t#{finishTime}\n
+Time taken\t\t\t#{runTime} minutes\n
+Item update interval\t\t#{ItemUpdateInterval/60} minutes\n
+Threads used\t\t\t#{NumberOfThreads}\n
+Sources\t\t\t\t#{TotalSources}\n
+Sources completed\t\t#{$sourcesCompleted}\n
+Items completed\t\t\t#{$itemsCompleted}\n
+New items\t\t\t#{$newItems}\n
+Updated items\t\t\t#{$updatedItems}\n
+Items not updated\t\t#{$notUpdatedItems}\n
+Items not added\t\t\t#{$notAddedItems}\n
+Full content errors\t\t#{$fullContentErrors}\n
+Full content timeouts\t\t#{$fullConentTimeouts}\n
+Keyword errors\t\t\t#{$keywordsErrors}"
+
+		sendScheduledReport(reportToSend)
 
 end

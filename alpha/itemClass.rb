@@ -275,7 +275,7 @@ class Item
 			fullSource = ""
 
 			#get full content within 5 seconds
-			Timeout.timeout(5){
+			Timeout.timeout(10){
 	    		begin
 	    			fullSource = open(url).read.force_encoding('UTF-8')
 	    		rescue

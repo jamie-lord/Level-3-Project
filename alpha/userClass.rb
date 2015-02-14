@@ -23,6 +23,8 @@ class User
 		puts "#{logTime} - #{type} - #{@name} - #{message}".black.on_red
 		if type == "BUG"
 			sendUserBug("#{logTime} - #{type} - #{@name} - #{message}")
+		elsif type == "ERROR"
+			sendError("#{logTime} - #{type} - #{@name} - #{message}")
 		end
 	end
 
@@ -231,5 +233,30 @@ class User
 	def getUserKeywords
 		#gets all members of sorted list
 		return CurrentDatabase.zrevrange("users:#{@name}:likedKeywords", 0, -1, :with_scores => true)
+	end
+
+	def addPotentialNewSource(url)
+		begin
+			finalUrl = getUltimateUrl(url)
+			puts finalUrl.blue
+			begin
+				feedUrls = findFeedUrl(finalUrl)
+				if feedUrls.empty?
+					self.addToLog("Couldn't find feed for #{finalUrl}", "INFO")
+				else
+					feedUrl = feedUrls[0].strip
+					puts feedUrl.blue
+					begin
+						self.addToLog(addNewSource(feedUrl), "SOURCE")
+					rescue
+						self.addToLog("addPotentialNewSource: Couldn't addNewSource for #{feedUrl}", "ERROR")
+					end
+				end
+			rescue
+				self.addToLog("addPotentialNewSource: Couldn't findFeedUrl for #{finalUrl}", "ERROR")
+			end
+		rescue
+			self.addToLog("addPotentialNewSource: Couldn't getUltimateUrl for #{url}", "ERROR")
+		end		
 	end
 end

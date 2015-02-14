@@ -192,7 +192,7 @@ post '/:name/addSource' do
     user = User.new(@name)
 
     if @url != nil
-      user.addToLog("Added new source #{@url}", "INFO")
+      user.addPotentialNewSource(@url)
     else
       user.addToLog("Failed to enter new source", "WARNING")
     end
