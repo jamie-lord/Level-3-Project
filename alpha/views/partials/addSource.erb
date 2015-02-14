@@ -1,0 +1,17 @@
+<p>
+	<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#addSource" aria-expanded="false" aria-controls="addSource">
+		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add a new source
+	</button>
+</p>
+<div class="collapse" id="addSource">
+	<div class="well">
+	<p>If you'd like to add a website to the system please enter it below. Note: it will not be added to the system immediately.</p>
+		<form class="form-inline" action="<%= @name %>/addSource" method="post">
+			<div class="form-group">
+				<label for="url">URL</label>
+				<input type="url" class="form-control" name="url" placeholder="http://arstechnica.com/" required>
+			</div>
+			<button type="submit" class="btn btn-default">Submit</button>
+		</form>
+	</div>
+</div>

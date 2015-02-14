@@ -21,6 +21,9 @@ class User
 		today = Time.now.strftime("%d/%m/%Y")
 		CurrentDatabase.sadd("logs:#{today}", "#{logTime} - #{type} - #{@name} - #{message}")
 		puts "#{logTime} - #{type} - #{@name} - #{message}".black.on_red
+		if type == "BUG"
+			sendUserBug("#{logTime} - #{type} - #{@name} - #{message}")
+		end
 	end
 
 	def toggleNew()

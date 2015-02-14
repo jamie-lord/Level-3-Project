@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>New user <%= SiteName %></title>
+    <title>Unknown user <%= SiteName %></title>
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom page style -->
@@ -23,17 +23,12 @@
     <div class="container">
         <div class="row">
             <div class=".col-md-8 .col-md-offset-2">
-                <h1>Welcome <%= @name %></h1>
-                <p>It looks like you're a new user.</p>
-                <p>Please enter at least one URL of a news item you find interesting...</p>
-                <form action="<%= @name %>/likeSeed" method="post">
-                    <input type="text" name="url0" required>
-                    <input type="text" name="url1">
-                    <input type="text" name="url2">
-                    <input type="text" name="url3">
-                    <input type="text" name="url4">
-                    <input type="submit">
-                </form>
+                <h1>"<%= @name %>" is an unknown username!</h1>
+            </div>
+        </div>
+        <div class="row">
+            <div class=".col-md-8 .col-md-offset-2">
+            <%=erb :'partials/footerButtons'%>
             </div>
         </div>
     </div>

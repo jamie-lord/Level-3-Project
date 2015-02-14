@@ -16,6 +16,7 @@ require "timeout"
 require_relative 'userClass.rb'
 require_relative 'sourceClass.rb'
 require_relative 'itemClass.rb'
+require_relative 'mailHelper.rb'
 
 #constant database host
 DatabaseHost = "192.168.0.13"
@@ -26,6 +27,8 @@ DatabaseNumber = 0
 CurrentDatabase = Redis.new(:host => DatabaseHost, :port => 6379, :db => DatabaseNumber)
 
 StartTime = Time.now.to_i
+
+TotalSources = 0
 
 SuppressOutput = true
 
@@ -144,6 +147,7 @@ def scanSource(id)
 			#runtime statistics
 			puts "\n>>>>>>>>>>>>>>>>RUNTIME INFORMATION<<<<<<<<<<<<<<<<<"
 			puts "\nTime running:\t\t\t\t#{Time.now.to_i - StartTime} seconds"
+			puts "\nSources:\t\t\t\t#{TotalSources}"
 			puts "\nSources completed:\t\t\t#{$sourcesCompleted}"
 			puts "\nItems completed:\t\t\t#{$itemsCompleted}"
 			puts "\nNew items:\t\t\t\t#{$newItems}".green
@@ -244,9 +248,15 @@ def findFeedUrl(url)
 	return Feedbag.find url
 end
 
+def doesUserExist(name)
+	return CurrentDatabase.exists("users:#{name}:meta")
+end
+
 if __FILE__ == $0
 
 	startTime = Time.now.strftime("%d/%m/%Y %H:%M:%S")
+
+	TotalSources = getTotalSources
 
 	#constant item update interval in seconds
 	ItemUpdateInterval = 1800

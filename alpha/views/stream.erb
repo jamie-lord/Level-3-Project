@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Your Stream</title>
+    <title><%= @name %>'s Stream <%= SiteName %></title>
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom page style -->
@@ -28,7 +28,7 @@
     <div class="container">
         <div class="row">
             <div class=".col-md-8 .col-md-offset-2">
-                <h1>Hello <%= @name %></h1>
+                <h1>Hello <%= @name %>, welcome to Fleek.in</h1>
                 <%=erb :'partials/welcome'%>
             </div>
         </div>
@@ -69,6 +69,11 @@
                 <% if @stream.empty? %>
                     <p>Sadly there's nothing new for you to read at the moment.</p>
                 <% end %>
+            </div>
+        </div>
+        <div class="row">
+            <div class=".col-md-8 .col-md-offset-2">
+            <%=erb :'partials/addSource'%>
             </div>
         </div>
         <div class="row">
