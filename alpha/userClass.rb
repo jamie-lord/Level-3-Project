@@ -78,6 +78,10 @@ class User
 		CurrentDatabase.srem("users:#{@name}:dislike", url)		
 	end
 
+	def incrStat(statName)
+		CurrentDatabase.hincrby("users:#{@name}:stats", statName, 1)
+	end
+
 	def updateStream
 
 		itemsLike = CurrentDatabase.scard("users:#{@name}:like").to_i
@@ -110,7 +114,7 @@ class User
 
 			itemId = itemKey.split("/", 2).last
 
-			if itemKey != nil || itemKey != ""
+			if itemKey.length > 0
 				addStream(itemKey, keyword[1])
 			end
 		end
@@ -194,6 +198,11 @@ class User
 		return stream
 	end
 
+	def getStats
+		stats = CurrentDatabase.hmget("users:#{@name}:stats", "like", "dislike", "clicked")
+		return stats
+	end
+
 	def trimStream
 		CurrentDatabase.zremrangebyrank("users:#{@name}:stream", 0, -11)
 	end
@@ -247,6 +256,7 @@ class User
 					feedUrl = feedUrls[0].strip
 					puts feedUrl.blue
 					begin
+						self.incrStat("sourcesAdded")
 						self.addToLog(addNewSource(feedUrl), "SOURCE")
 					rescue
 						self.addToLog("addPotentialNewSource: Couldn't addNewSource for #{feedUrl}", "ERROR")

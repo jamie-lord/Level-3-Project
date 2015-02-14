@@ -6,7 +6,7 @@
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <!-- Custom page style -->
     <style type="text/css">
-        
+
     </style>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
@@ -26,13 +26,30 @@
                 <h1>Welcome <%= @name %></h1>
                 <p>It looks like you're a new user.</p>
                 <p>Please enter at least one URL of a news item you find interesting...</p>
-                <form action="<%= @name %>/likeSeed" method="post">
-                    <input type="text" name="url0" required>
-                    <input type="text" name="url1">
-                    <input type="text" name="url2">
-                    <input type="text" name="url3">
-                    <input type="text" name="url4">
-                    <input type="submit">
+            </div>
+        </div>
+        <div class="row">
+            <div class=".col-md-6 .col-md-offset-3">
+                <form class="form-horizontal" action="<%= @name %>/likeSeed" method="post">
+                    <div class="form-group">
+                        <label for="url0">URL</label>
+                        <input type="url" class="form-control" name="url0" required>
+                    </div>
+                    <div class="form-group">
+                        <input type="url" class="form-control" name="url1">
+                    </div>
+                    <div class="form-group">
+                        <input type="url" class="form-control" name="url2">
+                    </div>
+                    <div class="form-group">
+                        <input type="url" class="form-control" name="url3">
+                    </div>
+                    <div class="form-group">
+                        <input type="url" class="form-control" name="url4">
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-primary">Generate your stream</button>
+                    </div>
                 </form>
             </div>
         </div>

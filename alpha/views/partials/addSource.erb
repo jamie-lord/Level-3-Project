@@ -2,10 +2,13 @@
 	<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#addSource" aria-expanded="false" aria-controls="addSource">
 		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add a new source
 	</button>
+	<button class="btn btn-default " type="button" data-toggle="collapse" data-target="#userStats" aria-expanded="false" aria-controls="userStats">
+		<span class="glyphicon glyphicon-stats" aria-hidden="true"></span> View your stats
+	</button>
 </p>
 <div class="collapse" id="addSource">
 	<div class="well">
-	<p>If you'd like to add a website to the system please enter it below. Note: it will not be added to the system immediately.</p>
+		<p>If you'd like to add a website to the system please enter it below. Note: it will not be added to the system immediately.</p>
 		<form class="form-inline" action="<%= @name %>/addSource" method="post">
 			<div class="form-group">
 				<label for="url">URL</label>
@@ -13,5 +16,29 @@
 			</div>
 			<button type="submit" class="btn btn-default">Submit</button>
 		</form>
+	</div>
+</div>
+<div class="collapse" id="userStats">
+	<div class="well">
+		<div class="container">
+			<div class="row">
+				<div class="col-md-4">
+					<ul class="list-group">
+						<li class="list-group-item">
+							<span class="badge"><%=@stats[0]%></span>
+							<span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span> Liked items
+						</li>
+						<li class="list-group-item">
+							<span class="badge"><%=@stats[1]%></span>
+							<span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span> Disliked items
+						</li>
+						<li class="list-group-item">
+							<span class="badge"><%=@stats[2]%></span>
+							<span class="glyphicon glyphicon-globe" aria-hidden="true"></span> Links clicked
+						</li>
+					</ul>
+				</div>
+			</div>
+		</div>
 	</div>
 </div>

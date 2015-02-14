@@ -290,6 +290,7 @@ def doesUserExist(name)
 end
 
 def getUltimateUrl(url)
+	url.split("#")[0]
 	begin
 		httpc = HTTPClient.new
 		resp = httpc.get(url)
