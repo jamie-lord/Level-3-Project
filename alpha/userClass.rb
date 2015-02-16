@@ -83,44 +83,93 @@ class User
 	end
 
 	def updateStream
-
+		#convert like items to liked
 		itemsLike = CurrentDatabase.scard("users:#{@name}:like").to_i
-
 		if itemsLike > 0
 			itemsLike.times do |i|
-				url = getLike
-
+				url = CurrentDatabase.spop("users:#{@name}:like").to_s
 				begin
 					keywords = getKeywordsFromUrl(url)
 
-					addUserKeywords(keywords)
+					addUserKeywords(keywords, "likedKeywords")
 				rescue
-					
 				end
-
 				addLiked(url)
-
 			end
 		end
 
-		keywords = getUserKeywords
+		#convert dislike items to disliked
+		itemsDislike = CurrentDatabase.scard("users:#{@name}:dislike").to_i
+		if itemsDislike > 0
+			itemsDislike.times do |i|
+				url = CurrentDatabase.spop("users:#{@name}:dislike").to_s
+				begin
+					keywords = getKeywordsFromUrl(url)
 
-		keywords.each do |keyword|
-
-			#get top item for specific keyword
-			itemKey = getTopItem(keyword[0])
-
-			sourceId = itemKey.split("/").first
-
-			itemId = itemKey.split("/", 2).last
-
-			if itemKey.length > 0
-				addStream(itemKey, keyword[1])
+					addUserKeywords(keywords, "dislikedKeywords")
+				rescue
+				end
+				addDisliked(url)
 			end
 		end
 
+		#trim keywords sets to maximum length of 50
+		CurrentDatabase.zremrangebyrank("users:#{@name}:likedKeywords", 0, -51)
+		CurrentDatabase.zremrangebyrank("users:#{@name}:dislikedKeywords", 0, -51)
+
+		#get all liked keywords for user
+		likedKeywords = getWholeUserSet("likedKeywords")
+
+		#get all disliked keywords for user
+		dislikedKeywords = getWholeUserSet("dislikedKeywords")
+
+		#for every liked keyword
+		likedKeywords.each do |keyword|
+
+			#get top 5 items for specific keyword
+			itemKeys = CurrentDatabase.zrevrange("keywords:#{keyword[0]}", 0, 1, :with_scores => true)
+
+			#for each item
+			itemKeys.each do |item|
+
+				#get item key
+				itemKey = item[0]
+
+				sourceId = itemKey.split("/").first
+
+				itemId = itemKey.split("/", 2).last
+
+				itemMetaArr = CurrentDatabase.hmget("items:#{sourceId}:#{itemId}:meta", "published", "facebookLikes", "facebookShares", "twitterShares")
+
+				itemAge = Time.now.to_i - itemMetaArr[0].to_i
+
+				socialTotal = itemMetaArr[1].to_i + itemMetaArr[2].to_i + itemMetaArr[3].to_i
+
+				itemScore = socialTotal
+
+				#if item is less than 2 hours old the increase score
+				if itemAge < 7200
+					itemScore += 7200 - itemAge
+				#if item is older that one month then decrease score
+				elsif itemAge > 2419200
+					itemScore -= 2000
+				end				
+
+				if itemKey.length > 0
+					addStream(itemKey, itemScore.to_i)
+				end
+			end
+		end
+
+		#only preserve the top 10 items currently in the stream
 		trimStream
 
+	end
+
+	def getTopItem(keyword)
+		item = CurrentDatabase.zrevrange("keywords:#{keyword}", 0, 5, :with_scores => true)
+		itemId = keywordArr[0].to_s
+		return itemId
 	end
 
 	def getKeywordsFromUrl(url)
@@ -143,21 +192,17 @@ class User
 		return text.keywords.top(20)
 	end
 
-	def addUserKeywords(keywords)
+	def addUserKeywords(keywords, key)
 		scoreKeyword = Array.new
 		keywords.each do |keyword|
 			scoreKeyword.push(keyword.weight, keyword.text)
-			if CurrentDatabase.zscore("users:#{@name}:likedKeywords", keyword.text) == nil
-				CurrentDatabase.zadd("users:#{@name}:likedKeywords", keyword.weight, keyword.text)
+			if CurrentDatabase.zscore("users:#{@name}:#{key}", keyword.text) == nil
+				CurrentDatabase.zadd("users:#{@name}:#{key}", keyword.weight, keyword.text)
 			else
-				CurrentDatabase.zincrby("users:#{@name}:likedKeywords", keyword.weight, keyword.text)
+				CurrentDatabase.zincrby("users:#{@name}:#{key}", keyword.weight, keyword.text)
 			end
 			
 		end
-	end
-
-	def getLike
-		return CurrentDatabase.spop("users:#{@name}:like").to_s
 	end
 
 	def getStream
@@ -217,7 +262,7 @@ class User
 		if isItemViewed(url) == false
 			CurrentDatabase.zadd("users:#{@name}:stream", score, globalId)
 		else
-			removeStream(globalId)
+			CurrentDatabase.zrem("users:#{@name}:stream", globalId)
 		end
 	end
 
@@ -237,26 +282,20 @@ class User
 		end
 	end
 
-	def removeStream(globalId)
-		CurrentDatabase.zrem("users:#{@name}:stream", globalId)
-	end
-
-	def getUserKeywords
+	def getWholeUserSet(setName)
 		#gets all members of sorted list
-		return CurrentDatabase.zrevrange("users:#{@name}:likedKeywords", 0, -1, :with_scores => true)
+		return CurrentDatabase.zrevrange("users:#{@name}:#{setName}", 0, -1, :with_scores => true)
 	end
 
 	def addPotentialNewSource(url)
 		begin
 			finalUrl = getUltimateUrl(url)
-			puts finalUrl.blue
 			begin
 				feedUrls = findFeedUrl(finalUrl)
 				if feedUrls.empty?
 					self.addToLog("Couldn't find feed for #{finalUrl}", "INFO")
 				else
 					feedUrl = feedUrls[0].strip
-					puts feedUrl.blue
 					begin
 						self.incrStat("sourcesAdded")
 						self.addToLog(addNewSource(feedUrl), "SOURCE")

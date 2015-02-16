@@ -298,6 +298,9 @@ class Item
 	    		end
 			}
 
+			#find any potential URLs in content
+			findAllUrls(fullSource)
+			
 			#strip HTML tags
 			fullContent = sanitiseHtml(fullSource)
 

@@ -100,9 +100,17 @@ def incrGlobalStat(statName)
 	CurrentDatabase.hincrby("stats:global", statName, 1)
 end
 
+def decrGlobalStat(statName)
+	CurrentDatabase.hincrby("stats:global", statName, -1)
+end
+
 def addNewUser(name)
 	CurrentDatabase.hmset("users:#{name}:meta", "name", name, "new", "true")
 	incrGlobalStat("users")
+end
+
+def addUserEmail(name, email)
+	CurrentDatabase.hset("users:#{name}:meta", "email", email)
 end
 
 def addNewSource(url)
@@ -267,12 +275,6 @@ def socialTwitterShares(url)
 	end	
 end
 
-def getTopItem(keyword)
-	keywordArr = CurrentDatabase.zrevrange("keywords:#{keyword}", 0, 0)
-	keyword = keywordArr[0].to_s
-	return keyword
-end
-
 def getItemUrl(sourceId, itemId)
 	return CurrentDatabase.hget("items:#{sourceId}:#{itemId}:meta", "url")
 end
@@ -300,6 +302,7 @@ end
 
 def getUltimateUrl(url)
 	url = url.split("#")[0]
+	url = url.split("?")[0]
 	begin
 		httpc = HTTPClient.new
 		resp = httpc.get(url)
@@ -311,6 +314,22 @@ def getUltimateUrl(url)
 	end	
 end
 
+def findAllUrls(page)
+	# Get HTTP(S) links only.
+	potentialLinks = URI.extract(page, /http(s)?/)
+	links = []
+	potentialLinks.each do |potentialLink|
+		begin
+			if potentialLink =~ /\A#{URI::regexp}\z/
+				uri = URI.parse(potentialLink)
+	    		links << "#{uri.scheme}://#{uri.host}"
+			end
+		rescue
+		end
+	end
+	CurrentDatabase.sadd("sources:potential", links)
+end
+
 if __FILE__ == $0
 
 	startTime = Time.now.strftime("%d/%m/%Y %H:%M:%S")
@@ -318,9 +337,9 @@ if __FILE__ == $0
 	TotalSources = getTotalSources
 
 	#constant item update interval in seconds
-	ItemUpdateInterval = 1800
+	ItemUpdateInterval = 3600
 
-	NumberOfThreads = 15
+	NumberOfThreads = 16
 
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"

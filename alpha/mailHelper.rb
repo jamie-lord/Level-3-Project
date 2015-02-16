@@ -47,3 +47,25 @@ def sendScheduledReport(reportString)
 
 	mail.deliver!
 end
+
+def sendWelcomeEmail(name, email)
+	mail = Mail.new do
+		from    'auto_send@fleek.in'
+		to      email
+		subject "You've now got a fleek.in account"
+		body    "Welcome to fleek.in! Your account name's #{name}. You can start using fleek.in here: http://fleek.in/#{name}"
+	end
+
+	mail.deliver!
+end
+
+def sendAccountRemovalEmail(name, email)
+	mail = Mail.new do
+		from    'auto_send@fleek.in'
+		to      email
+		subject "Your fleek.in account has been deleted"
+		body    "Your fleek.in account, '#{name}', has been perminantley removed."
+	end
+
+	mail.deliver!
+end
