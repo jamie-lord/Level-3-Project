@@ -1,9 +1,9 @@
 <p>
 	<button class="btn btn-default" type="button" data-toggle="collapse" data-target="#addSource" aria-expanded="false" aria-controls="addSource">
-		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add a new source
+		<span class="glyphicon glyphicon-plus" aria-hidden="true"></span> Add source
 	</button>
 	<button class="btn btn-default " type="button" data-toggle="collapse" data-target="#userStats" aria-expanded="false" aria-controls="userStats">
-		<span class="glyphicon glyphicon-stats" aria-hidden="true"></span> View your stats
+		<span class="glyphicon glyphicon-stats" aria-hidden="true"></span> View stats
 	</button>
 </p>
 <div class="collapse" id="addSource">
@@ -35,6 +35,26 @@
 						<li class="list-group-item">
 							<span class="badge"><%=@stats[2]%></span>
 							<span class="glyphicon glyphicon-globe" aria-hidden="true"></span> Links clicked
+						</li>
+					</ul>
+				</div>
+				<div class="col-md-4">
+					<ul class="list-group">
+						<li class="list-group-item">
+							<span class="badge"><%=@stats[3]%></span>
+							<span class="glyphicon glyphicon-cloud-download" aria-hidden="true"></span> Sources
+						</li>
+						<li class="list-group-item">
+							<span class="badge"><%=@stats[4]%></span>
+							<span class="glyphicon glyphicon-align-justify" aria-hidden="true"></span> Items
+						</li>
+						<li class="list-group-item">
+							<span class="badge"><%=@stats[5]%></span>
+							<span class="glyphicon glyphicon-text-color" aria-hidden="true"></span> Keywords
+						</li>
+						<li class="list-group-item">
+							<span class="badge"><%=@stats[6]%></span>
+							<span class="glyphicon glyphicon-user" aria-hidden="true"></span> Users
 						</li>
 					</ul>
 				</div>

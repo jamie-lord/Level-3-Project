@@ -102,6 +102,8 @@ class Item
 
 					$newItems += 1
 
+					incrGlobalStat("items")
+
 				rescue
 					@status = "not_added"
 
@@ -135,7 +137,7 @@ class Item
 	def configurePrimary(entry, unixTimeNow)
 		#redirect url and set
 	    if entry.url != nil
-	    	@url = followUrlRedirect(entry.url)
+	    	@url = getUltimateUrl(entry.url)
 	    end
 
 	  	#convert datetime to unix timestamp
@@ -240,9 +242,16 @@ class Item
 		scoreKeyword = Array.new
 		@keywords.each do |keyword|
 			scoreKeyword.push(keyword.weight, keyword.text)
-			CurrentDatabase.zadd("keywords:#{keyword.text}", keyword.weight, @globalId)
+			if doesKeywordExist(keyword.text) == false
+				incrGlobalStat("keywords")
+			end
+			CurrentDatabase.zadd("keywords:#{keyword.text}", keyword.weight, @globalId)		
 		end
 		CurrentDatabase.zadd("items:#{@sourceId}:#{@id}:keywords", scoreKeyword)
+	end
+
+	def doesKeywordExist(keyword)
+		return CurrentDatabase.exists("keywords:#{keyword}")
 	end
 
 	def setCategories(categories)

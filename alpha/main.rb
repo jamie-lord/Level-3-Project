@@ -11,6 +11,7 @@ require "net/http"
 require "open-uri"
 require "readability"
 require "redis"
+require "rss"
 require "timeout"
 
 require_relative 'userClass.rb'
@@ -21,7 +22,7 @@ require_relative 'mailHelper.rb'
 #constant database host
 DatabaseHost = "192.168.0.13"
 
-DatabaseNumber = 0
+DatabaseNumber = 1
 
 #constant database connetion
 CurrentDatabase = Redis.new(:host => DatabaseHost, :port => 6379, :db => DatabaseNumber)
@@ -60,7 +61,7 @@ end
 
 def stripUrl(url)
 
-	url = followUrlRedirect(url)
+	url = getUltimateUrl(url)
 
 	url.sub!(/https\:\/\/www./, '') if url.include? "https://www."
 
@@ -82,6 +83,26 @@ def getSourceId(url)
 	else
 		return sourceId.to_i
 	end
+end
+
+def addToGeneralLog(message, type)
+	logTime = Time.now.strftime("%d/%m/%Y %H:%M:%S")
+	today = Time.now.strftime("%d/%m/%Y")
+	CurrentDatabase.sadd("logs:#{today}", "#{logTime} - #{type} - SYSTEM - #{message}")
+	if type == "BUG"
+		sendUserBug("#{logTime} - #{type} - SYSTEM - #{message}")
+	elsif type == "ERROR"
+		sendError("#{logTime} - #{type} - SYSTEM - #{message}")
+	end
+end
+
+def incrGlobalStat(statName)
+	CurrentDatabase.hincrby("stats:global", statName, 1)
+end
+
+def addNewUser(name)
+	CurrentDatabase.hmset("users:#{name}:meta", "name", name, "new", "true")
+	incrGlobalStat("users")
 end
 
 def addNewSource(url)
@@ -119,6 +140,7 @@ def addNewSource(url)
 				CurrentDatabase.hmset("sources:#{id}", "url", url, "title", title, "lastScan", Time.now.to_i - 36000)
 				CurrentDatabase.zadd("sources:directory", id, url)
 				CurrentDatabase.incr("sources:nextId")
+				incrGlobalStat("sources")
 				return "Source: #{url} successfully added"
 			else
 				return "Source: #{url} returned code != 200"
@@ -141,19 +163,6 @@ def updateSourceDirectory()
 		url = CurrentDatabase.hget("sources:#{i}", "url").to_s
 
 		CurrentDatabase.zadd("sources:directory", i, url)
-	end
-end
-
-def followUrlRedirect(url)
-	url.split("#")[0]
-	begin
-		httpc = HTTPClient.new
-		resp = httpc.get(url)
-		open(url) do |resp|
-			return resp.base_uri.to_s
-		end
-	rescue
-		return url
 	end
 end
 
@@ -290,7 +299,7 @@ def doesUserExist(name)
 end
 
 def getUltimateUrl(url)
-	url.split("#")[0]
+	url = url.split("#")[0]
 	begin
 		httpc = HTTPClient.new
 		resp = httpc.get(url)

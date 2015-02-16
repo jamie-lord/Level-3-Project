@@ -200,6 +200,8 @@ class User
 
 	def getStats
 		stats = CurrentDatabase.hmget("users:#{@name}:stats", "like", "dislike", "clicked")
+		globalStats = CurrentDatabase.hmget("stats:global", "sources", "items", "keywords", "users")
+		stats.concat globalStats
 		return stats
 	end
 
