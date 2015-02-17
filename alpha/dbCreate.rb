@@ -24,9 +24,15 @@ def addSourceDirectory()
 end
 
 if __FILE__ == $0
+	addNewUser("jamie")
+	addNewUser("john")
+	addNewUser("charles")
+	addNewUser("jake")
+	addNewUser("jordan")
+	addNewUser("lucy")
+	addNewUser("tarik")
+	addNewUser("test")
 	CurrentDatabase.set("sources:nextId", 0)
 	addSources
 	addSourceDirectory
-	addNewUser("jamie")
-	addNewUser("john")
 end

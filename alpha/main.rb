@@ -22,7 +22,7 @@ require_relative 'mailHelper.rb'
 #constant database host
 DatabaseHost = "192.168.0.13"
 
-DatabaseNumber = 1
+DatabaseNumber = 0
 
 #constant database connetion
 CurrentDatabase = Redis.new(:host => DatabaseHost, :port => 6379, :db => DatabaseNumber)
@@ -317,9 +317,12 @@ def findAllUrls(page)
 		begin
 			if potentialLink =~ /\A#{URI::regexp}\z/
 				uri = URI.parse(potentialLink)
-				if CurrentDatabase.sismember("sources:done", "#{uri.scheme}://#{uri.host}") == false
-	    			links << "#{uri.scheme}://#{uri.host}"
-	    		end
+				#stop including bloody tumblr links!
+				unless uri.include? "tumblr"
+					if CurrentDatabase.sismember("sources:done", "#{uri.scheme}://#{uri.host}") == false
+		    			links << "#{uri.scheme}://#{uri.host}"
+		    		end
+		    	end
 			end
 		rescue
 		end
