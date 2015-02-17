@@ -15,7 +15,7 @@ helpers do
 end
 
 get '/' do
-  # NOTHING
+  erb :home
 end
 
 get '/:name/like' do

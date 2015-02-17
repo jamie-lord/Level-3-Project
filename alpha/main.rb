@@ -137,11 +137,6 @@ def addNewSource(url)
 
 					title = rss.channel.title.to_s
 
-					# Output the feed title and website URL
-					puts "Title: #{title}"
-					puts "RSS URL: #{rss.channel.link}"
-					puts "Total entries: #{rss.items.size}"
-
 				rescue
 					title = ""
 				end
@@ -322,7 +317,9 @@ def findAllUrls(page)
 		begin
 			if potentialLink =~ /\A#{URI::regexp}\z/
 				uri = URI.parse(potentialLink)
-	    		links << "#{uri.scheme}://#{uri.host}"
+				if CurrentDatabase.sismember("sources:done", "#{uri.scheme}://#{uri.host}") == false
+	    			links << "#{uri.scheme}://#{uri.host}"
+	    		end
 			end
 		rescue
 		end
@@ -337,9 +334,9 @@ if __FILE__ == $0
 	TotalSources = getTotalSources
 
 	#constant item update interval in seconds
-	ItemUpdateInterval = 3600
+	ItemUpdateInterval = 43200
 
-	NumberOfThreads = 16
+	NumberOfThreads = 32
 
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"

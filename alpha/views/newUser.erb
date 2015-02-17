@@ -3,11 +3,10 @@
 <head>
     <title>New user <%= SiteName %></title>
     <!-- Bootstrap -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom page style -->
-    <style type="text/css">
+    <link href="<%=StyleSheet%>" rel="stylesheet">
 
-    </style>
+    <%=Favicon%>
+
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
     <!-- Latest compiled and minified JavaScript -->
@@ -26,7 +25,7 @@
                 <h1>Welcome <%= @name %></h1>
                 <p>If I'm not mistaken, you're new to these parts.</p>
                 <p>Please enter at least one URL of a news item you find interesting, the more you enter the better your results will be.</p>
-                <p>For example if you like Formula 1 you might input <a href="http://www.bbc.co.uk/sport/0/formula1/31409991">http://www.bbc.co.uk/sport/0/formula1/31409991</a>, or if you're into space something like this <a href="http://blogs.esa.int/rosetta/2015/02/16/cometwatch-14-february-flyby-special/">http://blogs.esa.int/rosetta/2015/02/16/cometwatch-14-february-flyby-special/</a>. Just copy a few URLs of blog posts or news items that tickle your fancy.</p>
+                <p>For example if you like Formula 1 you might input <a href="http://www.bbc.co.uk/sport/0/formula1/31409991">http://www.bbc.co.uk/sport/0/formula1/31409991</a>; or if you're into space, something like this <a href="http://blogs.esa.int/rosetta/2015/02/16/cometwatch-14-february-flyby-special/">http://blogs.esa.int/rosetta/2015/02/16/cometwatch-14-february-flyby-special/</a>. Just copy a few URLs of blog posts or news items that tickle your fancy.</p>
             </div>
         </div>
         <div class="row">

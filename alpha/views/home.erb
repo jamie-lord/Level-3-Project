@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title><%= SiteName %></title>
+    <!-- Bootstrap -->
+    <link href="<%=StyleSheet%>" rel="stylesheet">
+
+    <%=Favicon%>
+
+    <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.2/jquery.min.js"></script>
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="row">
+            <div class=".col-md-8 .col-md-offset-2">
+                <div class="jumbotron">
+                  <h1>Welcome to Fleek.in</h1>
+                  <p>We're currently in a closed beta. Drop me an email if you're interested in taking part.</p>
+                  <p><a class="btn btn-info btn-lg" type="button" href="mailto:jamie@fleek.in" data-toggle="tooltip" data-placement="top" title data-original-title="If you've got something to say, why not just send me an old-fashioned email?">
+                        <span class="glyphicon glyphicon-envelope" aria-hidden="true"></span> Email the developer
+                    </a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+    <%=erb :'partials/footerButtons'%>
+</body>

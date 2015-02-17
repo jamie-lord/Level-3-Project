@@ -3,14 +3,20 @@
 <head>
     <title><%= @name %>'s Stream <%= SiteName %></title>
     <!-- Bootstrap -->
-    <link href="css/bootstrap.min.css" rel="stylesheet">
+    <link href="<%=StyleSheet%>" rel="stylesheet">
+
+    <%=Favicon%>
+
     <!-- Custom page style -->
     <style type="text/css">
         p.streamButtons {
             margin: 0px
         }
-        h5 a :visited {
-            color: #999
+        a.stream, .table a:not(.btn), .table a:not(.btn) {
+            text-decoration: none;
+        }
+        a.stream:hover {
+            text-decoration: underline;
         }
     </style>
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
@@ -36,27 +42,28 @@
             <div class=".col-md-8 .col-md-offset-2">
                 <% if !@stream.empty? %>
                 <div class="table-responsive">
-                    <table class="table table-hover">
+                    <table class="table table-hover stream">
                         <tbody>
                             <%@stream.each do |item|
                                 url = item[0]
                                 title = item[1]
                                 source = item[2]
                                 author = item[3]
+                                age = item[4]
                                 %>
                                 <tr>
                                     <td>
-                                        <h5>
-                                            <a href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a><small> <%= source %>
+                                        <h4>
+                                            <a class="stream" href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a> <small> <%= source %>
                                             <% if author.length > 2 && author != "undefined" && author != source %>
                                             by <%= author %>
-                                            <%end%></small>
-                                        </h5>
+                                            <%end%></small> <%if age == "new"%><span class="label label-success">New</span><%elsif age == "old"%><span class="label label-danger">Old</span><%end%>
+                                        </h4>
                                     </td>
                                     <td>
                                         <p class="text-right streamButtons">
-                                            <a class="btn btn-success" href="<%= @name %>/like?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is relevant to your interests and like it"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
-                                            <a class="btn btn-danger" href="<%= @name %>/dislike?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title="This item is relevant to your interests but you don't like it"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>
+                                            <a class="btn btn-success" href="<%= @name %>/like?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title data-original-title="You like this item, it has content that interests you"><span class="glyphicon glyphicon-thumbs-up" aria-hidden="true"></span></a>
+                                            <a class="btn btn-danger" href="<%= @name %>/dislike?url=<%= url %>" role="button" data-toggle="tooltip" data-placement="top" title data-original-title="You don't like this item, it isn't interesting to you"><span class="glyphicon glyphicon-thumbs-down" aria-hidden="true"></span></a>
                                         </p>
                                     </td>
                                 </tr>

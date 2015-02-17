@@ -161,6 +161,26 @@ class User
 			end
 		end
 
+		#sanitise stream i.e. remove previously viewed items
+		#get whole stream
+		stream = CurrentDatabase.zrevrange("users:#{@name}:stream", 0, -1)
+
+		stream.each do |item|
+
+			itemKey = item.to_s
+
+			sourceId = itemKey.split("/").first
+
+			itemId = itemKey.split("/", 2).last
+
+			url = getItemMeta(sourceId, itemId, "url")
+
+			if isItemViewed(url) == true
+				CurrentDatabase.zrem("users:#{@name}:stream", itemKey)
+				puts "Removing item #{url} from stream as already viewed"
+			end
+		end
+
 		#only preserve the top 10 items currently in the stream
 		trimStream
 
@@ -218,24 +238,39 @@ class User
 
 			item = []
 
+			#item[0]
 			item << getItemMeta(sourceId, itemId, "url")
 
+			#item[1]
 			item << getItemMeta(sourceId, itemId, "title")
 
 			sourceTitle = getSourceMeta(sourceId, "title")
 
-			if sourceTitle == nil || sourceTitle == ""
-				item << ""
-			else
+			#item[2]
+			if sourceTitle.length > 0
 				item << sourceTitle
+			else
+				item << ""
 			end
 
 			itemAuthor = getItemMeta(sourceId, itemId, "author")
 
-			if itemAuthor == nil || itemAuthor == ""
-				item << ""
-			else
+			#item[3]
+			if itemAuthor.length > 0
 				item << itemAuthor
+			else
+				item << ""
+			end
+
+			#item[4]
+			published = getItemMeta(sourceId, itemId, "published")
+
+			if (Time.now.to_i - published.to_i) < 7200
+				item << "new"
+			elsif (Time.now.to_i - published.to_i) > 15768000
+				item << "old"
+			else
+				item << ""
 			end
 
 			stream << item
