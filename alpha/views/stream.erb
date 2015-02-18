@@ -50,6 +50,7 @@
                                 source = item[2]
                                 author = item[3]
                                 age = item[4]
+                                social = item[5]
                                 %>
                                 <tr>
                                     <td>
@@ -57,7 +58,7 @@
                                             <a class="stream" href="<%= @name %>/redirect?url=<%= url %>" target="_blank"><%= title %></a> <small> <%= source %>
                                             <% if author.length > 2 && author != "undefined" && author != source %>
                                             by <%= author %>
-                                            <%end%></small> <%if age == "new"%><span class="label label-success">New</span><%elsif age == "old"%><span class="label label-danger">Old</span><%end%>
+                                            <%end%></small> <%if social > 50%><span class="glyphicon glyphicon-fire" aria-hidden="true" style="color: #df691a;"></span><%end%> <%if age == "new"%><span class="label label-success">New</span><%elsif age == "old"%><span class="label label-danger">Old</span><%end%>
                                         </h4>
                                     </td>
                                     <td>

@@ -181,7 +181,6 @@ def scanSource(id)
 	#for each item
 	begin
 		currentSource.feed.entries.each do |entry|
-
 			#create item object
 			currentItem = Item.new(id, entry)
 
@@ -318,7 +317,7 @@ def findAllUrls(page)
 			if potentialLink =~ /\A#{URI::regexp}\z/
 				uri = URI.parse(potentialLink)
 				#stop including bloody tumblr links!
-				unless uri.include? "tumblr"
+				unless (uri.to_s).include? "tumblr"
 					if CurrentDatabase.sismember("sources:done", "#{uri.scheme}://#{uri.host}") == false
 		    			links << "#{uri.scheme}://#{uri.host}"
 		    		end
@@ -327,7 +326,9 @@ def findAllUrls(page)
 		rescue
 		end
 	end
-	CurrentDatabase.sadd("sources:potential", links)
+	unless links.empty?
+		CurrentDatabase.sadd("sources:potential", links)
+	end
 end
 
 if __FILE__ == $0
@@ -337,9 +338,9 @@ if __FILE__ == $0
 	TotalSources = getTotalSources
 
 	#constant item update interval in seconds
-	ItemUpdateInterval = 43200
+	ItemUpdateInterval = 21600
 
-	NumberOfThreads = 32
+	NumberOfThreads = 16
 
 	#runtime information
 	puts "\n*********************RUNTIME INFORMATION*********************"

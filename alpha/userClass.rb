@@ -265,13 +265,16 @@ class User
 			#item[4]
 			published = getItemMeta(sourceId, itemId, "published")
 
-			if (Time.now.to_i - published.to_i) < 7200
+			if (Time.now.to_i - published.to_i) < 10800
 				item << "new"
 			elsif (Time.now.to_i - published.to_i) > 15768000
 				item << "old"
 			else
 				item << ""
 			end
+
+			#item[5]
+			item << getItemMeta(sourceId, itemId, "facebookLikes").to_i + getItemMeta(sourceId, itemId, "twitterShares").to_i + getItemMeta(sourceId, itemId, "facebookShares").to_i
 
 			stream << item
 		end
